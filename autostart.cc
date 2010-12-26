@@ -124,8 +124,8 @@ bool cPluginAutostart::Service(const char *Id, void *Data)
 
 void cPluginAutostart::ProcessService(const AutoStartService as)
 {
-    ValueList vl = as.mKeyList;
-    ValueList::iterator it;
+    cExtStringVector vl = as.mKeyList;
+    cExtStringVector::iterator it;
     cPlugin *p;
 
     for (it = vl.begin(); it != vl.end(); it++) {

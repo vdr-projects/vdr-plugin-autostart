@@ -1,5 +1,5 @@
 #
-# Makefile for a Video Disk Recorder plugin
+# Makefile for the autostart Video Disk Recorder plugin
 #
 # $Id$
 
@@ -86,6 +86,7 @@ CXXFLAGS += $(shell pkg-config --cflags libcdio_cdda)
 # Options for DVDRead
 LIBS += $(shell pkg-config --libs dvdread)
 CXXFLAGS += $(shell pkg-config --cflags dvdread)
+
 ### The main target:
 
 all: libvdr-$(PLUGIN).so i18n
@@ -100,7 +101,7 @@ all: libvdr-$(PLUGIN).so i18n
 MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
-	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) > $@
+	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) > $@
 
 -include $(DEPFILE)
 
@@ -147,4 +148,4 @@ dist: clean
 	@echo Distribution package created as $(PACKAGE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot
+	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot detectortest

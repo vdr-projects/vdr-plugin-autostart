@@ -37,7 +37,7 @@ void cMediaDetector::RegisterTester(const cMediaTester *tester,
 bool cMediaDetector::AddDetector (const cExtString section)
 {
     bool found = false;
-    ValueList vals;
+    cExtStringVector vals;
     mLogger.logmsg(LOGLEVEL_INFO, "Section %s", section.c_str());
     cExtString type;
     if (!mConfigFileParser.GetSingleValue(section, "TYPE", type)) {
@@ -62,7 +62,7 @@ bool cMediaDetector::AddDetector (const cExtString section)
 
 bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
 {
-    ValueList vals;
+    cExtStringVector vals;
 
 printf("Section %s\n", sectionname.c_str());
     if (sectionname != "GLOBAL") {
@@ -70,7 +70,7 @@ printf("Section %s\n", sectionname.c_str());
     }
 
     if (mConfigFileParser.GetValues(sectionname, "FILTERDEV", vals)) {
-        ValueList::iterator it;
+        cExtStringVector::iterator it;
         for (it = vals.begin(); it != vals.end(); it++) {
             cExtString dev = *it;
             mLogger.logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
@@ -130,9 +130,9 @@ bool cMediaDetector::InDeviceFilter(const string dev)
 }
 
 bool cMediaDetector::DoDetect(const cMediaHandle mediainfo,
-                                  string &description,  ValueList &vl)
+                                  string &description,  cExtStringVector &vl)
 {
-    ValueList keylist;
+    cExtStringVector keylist;
     bool found = false;
     MediaTesterVector::iterator it;
 
@@ -183,57 +183,75 @@ bool cMediaDetector::DoDetect(const cMediaHandle mediainfo,
     return found;
 }
 
-ValueList cMediaDetector::Detect(string &description, cMediaHandle &mediainfo)
+void cMediaDetector::DoDeviceRemoved(const cMediaHandle mediainfo)
+{
+    MediaTesterVector::iterator it;
+    // Cleanup device caches for each detector
+    for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
+        cMediaTester *t = *it;
+        try {
+            t->removeDevice(mediainfo);
+        } catch (cDeviceKitException &e) {
+            mLogger.logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
+        }
+    }
+}
+
+cExtStringVector cMediaDetector::Detect(string &description, cMediaHandle &mediainfo)
 {
     string path;
     cMediaHandle descr;
-    ValueList keylist;
+    cExtStringVector keylist;
+    cDbusDevkit::DEVICE_SIGNAL signal;
     running = true;
     while (running) {
-        if (mDevkit.WaitDevkit(1000, path)) {
-            try {
-                descr.GetDescription(mDevkit, path);
+        if (mDevkit.WaitDevkit(1000, path, signal)) {
+            if (signal == cDbusDevkit::DeviceRemoved) {
+                DoDeviceRemoved (mediainfo);
+            } else {
+                try {
+                    descr.GetDescription(mDevkit, path);
 
 #ifdef DEBUG
-                mLogger.logmsg(LOGLEVEL_INFO, "Path       : %s", path.c_str());
-                mLogger.logmsg(LOGLEVEL_INFO, "NativePath : %s",
-                        mDevkit.GetNativePath(path).c_str());
-                mLogger.logmsg(LOGLEVEL_INFO, "Type       : %s",
-                        mDevkit.GetType(path).c_str());
-                mLogger.logmsg(LOGLEVEL_INFO, "Device File: %s",
-                        mDevkit.GetDeviceFile(path).c_str());
+                    mLogger.logmsg(LOGLEVEL_INFO, "Path       : %s",
+                            path.c_str());
+                    mLogger.logmsg(LOGLEVEL_INFO, "NativePath : %s",
+                            mDevkit.GetNativePath(path).c_str());
+                    mLogger.logmsg(LOGLEVEL_INFO, "Type       : %s",
+                            mDevkit.GetType(path).c_str());
+                    mLogger.logmsg(LOGLEVEL_INFO, "Device File: %s",
+                            mDevkit.GetDeviceFile(path).c_str());
 
-                if (mDevkit.IsMounted(path)) {
-                    mLogger.logmsg(LOGLEVEL_INFO, "Mounted -----> %s",
-                            mDevkit.GetMountPaths(path).at(0).c_str());
-                }
-                if (mDevkit.IsOpticalDisk(path)) {
-                    mLogger.logmsg(LOGLEVEL_INFO, "Optical Disk ");
-                }
-                if (mDevkit.IsPartition(path)) {
-                    mLogger.logmsg(LOGLEVEL_INFO, "Partition ");
-                }
-                if (mDevkit.IsMediaAvailable(path)) {
-                    mLogger.logmsg(LOGLEVEL_INFO, "Media Available ");
-                }
-
-
+                    if (mDevkit.IsMounted(path)) {
+                        mLogger.logmsg(LOGLEVEL_INFO, "Mounted -----> %s",
+                                mDevkit.GetMountPaths(path).at(0).c_str());
+                    }
+                    if (mDevkit.IsOpticalDisk(path)) {
+                        mLogger.logmsg(LOGLEVEL_INFO, "Optical Disk ");
+                    }
+                    if (mDevkit.IsPartition(path)) {
+                        mLogger.logmsg(LOGLEVEL_INFO, "Partition ");
+                    }
+                    if (mDevkit.IsMediaAvailable(path)) {
+                        mLogger.logmsg(LOGLEVEL_INFO, "Media Available ");
+                    }
 #endif
-            } catch (cDeviceKitException &e) {
-                mLogger.logmsg(LOGLEVEL_WARNING, "DeviceKit Error %s", e.what());
-            }
+                } catch (cDeviceKitException &e) {
+                    mLogger.logmsg(LOGLEVEL_WARNING, "DeviceKit Error %s",
+                            e.what());
+                }
 
-            if (InDeviceFilter(mDevkit.GetDeviceFile(path))) {
-                mLogger.logmsg(LOGLEVEL_INFO, "Device %s in device filter",
-                                mDevkit.GetDeviceFile(path).c_str());
-            }
-            else {
+                if (InDeviceFilter(mDevkit.GetDeviceFile(path))) {
+                    mLogger.logmsg(LOGLEVEL_INFO, "Device %s in device filter",
+                            mDevkit.GetDeviceFile(path).c_str());
+                } else {
 #ifdef DEBUG
-                mLogger.logmsg(LOGLEVEL_INFO, "  ******** Detect ********");
+                    mLogger.logmsg(LOGLEVEL_INFO, "  ******** Detect ********");
 #endif
-                if (DoDetect (descr, description, keylist)) {
-                    mediainfo = descr;
-                    return (keylist);
+                    if (DoDetect(descr, description, keylist)) {
+                        mediainfo = descr;
+                        return (keylist);
+                    }
                 }
             }
         }

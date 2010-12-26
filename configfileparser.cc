@@ -14,10 +14,12 @@
 
 using namespace std;
 
+std::string cConfigFileParser::mWhiteSpace = " \t\n";
+
 void cConfigFileParser::AddKey (Key &kl, const cExtString &key, const cExtString &val)
 {
     Key::iterator iter;
-    ValueList vl;
+    cExtStringVector vl;
     iter = kl.find(key);
     if (iter != kl.end()) {
         vl = iter->second;
@@ -36,13 +38,13 @@ void cConfigFileParser::AddSection (cExtString sectionname,
     Key kl;
     sectionname = sectionname.ToUpper();
     key = key.ToUpper();
-    iter = sections.find(sectionname);
-    if (iter != sections.end()) {
+    iter = mSections.find(sectionname);
+    if (iter != mSections.end()) {
         kl = iter->second;
     }
 
     AddKey(kl, key, val);
-    sections[sectionname] = kl;
+    mSections[sectionname] = kl;
 }
 
 bool cConfigFileParser::isSection (const cExtString &token, cExtString &section)
@@ -55,31 +57,74 @@ bool cConfigFileParser::isSection (const cExtString &token, cExtString &section)
     return false;
 }
 
-bool cConfigFileParser::ParseLine (const cExtString &line)
+cExtStringQueue cConfigFileParser::TokenizeLine (const cExtString line)
+{
+    cExtStringQueue q;
+    cExtString newstr;
+    size_t i;
+    char c;
+    bool apo_active = false;
+
+    for (i = 0; i < line.size(); i++ )
+    {
+        c = line.at(i);
+        if (isspace(c) && (!apo_active)) {
+            if (!newstr.empty()) {
+                q.push(newstr);
+                newstr.clear();
+            }
+        }
+        else if (c == '"') {
+            if (apo_active) {
+                q.push(newstr);
+                newstr.clear();
+                apo_active = false;
+            }
+            else
+            {
+                apo_active = true;
+            }
+        }
+        else {
+            newstr += c;
+        }
+    }
+    if (!newstr.empty()) {
+        q.push(newstr);
+        newstr.clear();
+    }
+    return q;
+}
+
+bool cConfigFileParser::ParseLine (const cExtString line)
 {
     stringstream buffer(line);
     cExtString token;
     cExtString key;
     bool keysep = false;
+    cExtStringQueue q = TokenizeLine (line);
 
-    while (buffer.good()) {
-        buffer >> token;
+    while (!q.empty()) {
+        token = q.front();
+        q.pop();
         /* Comment found ? */
         if (isComment(token)) {
             return true;
         }
         /* Is a section ? */
         if (isSection(token, mCurrSection)) {
-            buffer >> token;
-            if (buffer.good()) {
+            if (!q.empty()) {
+                token = q.front();
+                q.pop();
+
                 if (isComment(token)) {
                     return true;
-                }
-                else {
-                    mLogger.logmsg (LOGLEVEL_ERROR,"Syntax error on section");
+                } else {
+                    mLogger.logmsg(LOGLEVEL_ERROR, "Syntax error on section");
                     return false;
                 }
             }
+
             return true;
         }
         /* Read key */
@@ -138,7 +183,7 @@ bool cConfigFileParser::Parse(const cExtString fname)
 // Returns true if the key was found.
 bool cConfigFileParser::GetValues (const cExtString sectionname,
                                        const cExtString key,
-                                       ValueList &values)
+                                       cExtStringVector &values)
 {
     Section::iterator seciter;
     Key::iterator keyiter;
@@ -146,8 +191,8 @@ bool cConfigFileParser::GetValues (const cExtString sectionname,
 
     cExtString section = sectionname.ToUpper();
     cExtString k = key.ToUpper();
-    seciter = sections.find(section);
-    if (seciter == sections.end()) {
+    seciter = mSections.find(section);
+    if (seciter == mSections.end()) {
         string err = "Can not find section " + section;
         mLogger.logmsg(LOGLEVEL_ERROR,err.c_str());
         return false;
@@ -168,7 +213,7 @@ bool cConfigFileParser::GetSingleValue (const cExtString sectionname,
                                              const cExtString key,
                                              cExtString &value)
 {
-    ValueList vals;
+    cExtStringVector vals;
 
     cExtString plugin;
     if (!GetValues(sectionname, key, vals)) {
@@ -189,10 +234,10 @@ bool cConfigFileParser::GetFirstSection (Section::iterator &iter,
                                               cExtString &sectionname)
 {
 
-    if (sections.empty()) {
+    if (mSections.empty()) {
         return false;
     }
-    iter = sections.begin();
+    iter = mSections.begin();
     sectionname = iter->first;
     return true;
 }
@@ -203,7 +248,7 @@ bool cConfigFileParser::GetNextSection (Section::iterator &iter,
                                              cExtString &sectionname)
 {
     iter++;
-    if (iter == sections.end()) {
+    if (iter == mSections.end()) {
         return false;
     }
     sectionname = iter->first;

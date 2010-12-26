@@ -63,8 +63,8 @@ bool cMediaHandle::AutoMount(cExtString &mountpath)
         try {
             if (!mDevKit->IsMounted(mPath)) {
                 mLogger.logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
-                        mDevKit->Mount(mPath).c_str());
-                automounted = true;
+                        mDevKit->AutoMount(mPath).c_str());
+                mAutomounted = true;
             }
             mountpath = mDevKit->GetMountPaths(mPath).at(0);
             mLogger.logmsg(LOGLEVEL_INFO, "Mount Path %s", mountpath.c_str());
@@ -79,25 +79,25 @@ bool cMediaHandle::AutoMount(cExtString &mountpath)
 
 void cMediaHandle::Umount(void)
 {
-    if (!automounted) {
+    if (!mAutomounted) {
         return;
     }
     mDevKit->UnMount(mPath);
-    automounted = false;
+    mAutomounted = false;
 }
 
-ValueList cMediaTester::getList (cConfigFileParser config,
+cExtStringVector cMediaTester::getList (cConfigFileParser config,
                                     const cExtString sectionname,
                                     const cExtString key)
 {
-    ValueList vals;
+    cExtStringVector vals;
     if (!config.GetValues(sectionname, key, vals)) {
         mLogger.logmsg(LOGLEVEL_ERROR, "No %s specified in section %s",
                 key.c_str(), sectionname.c_str());
         exit(-1);
     }
 
-    ValueList::iterator it;
+    cExtStringVector::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         mLogger.logmsg(LOGLEVEL_INFO, "ADD %s %s", key.c_str(), it->c_str());
     }

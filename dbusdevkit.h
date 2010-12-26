@@ -70,29 +70,27 @@ class cDbusDevkit {
                               throw (cDeviceKitException);
     bool WaitConn (void) throw (cDeviceKitException);
 
-    DBusMessage *CallInterface (const std::string &path,
-                                  const std::string &name)
-                                  throw (cDeviceKitException);
 
-    // Call an interface method which returns a string
-    std::string CallInterfaceS(const std::string &path,
-                                 const std::string &name)
-                                 throw (cDeviceKitException);
     // Call an interface method which does not return a value
     void CallInterfaceV(const std::string &path,
                            const std::string &name)
                            throw (cDeviceKitException);
 
   public:
+    typedef enum {
+        DeviceAdded,
+        DeviceRemoved,
+        DeviceChanged,
+        Unkown
+    } DEVICE_SIGNAL;
     cDbusDevkit();
 
     void SetLogger (cLogger logger) { mLogger = logger; }
 
-    bool WaitDevkit(int timeout, std::string &retpath);
-    std::string Mount(const std::string &path)
-                                throw (cDeviceKitException) {
-        return CallInterfaceS (path, "FilesystemMount");
-    }
+    bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
+
+    std::string AutoMount(const std::string path)
+                                throw (cDeviceKitException);
     void UnMount (const std::string &path)
                                 throw (cDeviceKitException) {
         CallInterfaceV (path, "FilesystemUnmount");

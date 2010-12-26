@@ -19,14 +19,17 @@
 
 using namespace std;
 
-cFileDetector::SuffixType cFileDetector::suffix;
-cFileDetector::SuffixType cFileDetector::mDetectedSuffixCache;
+cFileDetector::StringSet cFileDetector::mSuffix;
+cFileDetector::StringSet cFileDetector::mDetectedSuffixCache;
+cFileDetector::StringMap cFileDetector::mDeviceMap;
+string cFileDetector::mMountPath;
+string cFileDetector::mMountProg;
 
 bool cFileDetector::FindSuffix (const cExtString str) {
-    SuffixType::iterator iter;
-    iter = suffix.find(str);
+    StringSet::iterator iter;
+    iter = mSuffix.find(str);
 
-    if (iter == suffix.end()) {
+    if (iter == mSuffix.end()) {
         return (false);
     }
     return (true);
@@ -80,18 +83,22 @@ void cFileDetector::BuildSuffixCache (string path) {
     (void)closedir(dp);
 }
 
-bool cFileDetector::isMedia (cMediaHandle d, ValueList &keylist)
+bool cFileDetector::isMedia (cMediaHandle d, cExtStringVector &keylist)
 {
     MEDIA_MASK_T m = d.GetMediaMask();
     bool found = false;
     cExtString mountpath;
 
-    if (!(m & MEDIA_AVAILABLE))
-    {
+    if (!(m & MEDIA_AVAILABLE)) {
         return false;
     }
-
-    SuffixType::iterator it;
+    if (inDeviceSet(d.GetDeviceFile())) {
+        return false;
+    }
+    if (!d.isAutoMounted()) {
+        return false;
+    }
+    StringSet::iterator it;
     cExtString s;
     for (it = mDetectedSuffixCache.begin(); it != mDetectedSuffixCache.end(); it++) {
         s = *it;
@@ -103,6 +110,8 @@ bool cFileDetector::isMedia (cMediaHandle d, ValueList &keylist)
 
     if (found) {
         keylist = mKeylist;
+        mMountPath = mConfiguredMountPath;
+        mMountProg = mConfiguredMountProg;
     }
     return found;
 }
@@ -114,18 +123,25 @@ bool cFileDetector::loadConfig (cConfigFileParser config,
         return false;
     }
 
-    ValueList vals;
+    cExtStringVector vals;
     if (!config.GetValues(sectionname, "FILES", vals)) {
         mLogger.logmsg(LOGLEVEL_ERROR, "No files specified");
         return false;
     }
 
-    ValueList::iterator it;
+    cExtStringVector::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         string s = *it;
-        suffix.insert(s);
+        mSuffix.insert(s);
         mLogger.logmsg(LOGLEVEL_INFO, "  Add file %s", s.c_str());
     }
+
+    // Read Mount-Path
+    config.GetSingleValue(sectionname, "MOUNTPATH", mConfiguredMountPath);
+    mLogger.logmsg(LOGLEVEL_INFO, "Mountpath : %s", mConfiguredMountPath.c_str());
+    // Read Mount-Programm
+    config.GetSingleValue(sectionname, "MOUNTPROG", mConfiguredMountProg);
+    mLogger.logmsg(LOGLEVEL_INFO, "Mountprog : %s", mConfiguredMountProg.c_str());
     return true;
 }
 
@@ -133,13 +149,21 @@ void cFileDetector::startScan (cMediaHandle d)
 {
     MEDIA_MASK_T m = d.GetMediaMask();
     cExtString mountpath;
+    cExtString dev = d.GetDeviceFile();
 
+    mMountPath.clear();
     mDetectedSuffixCache.clear();
     if (!(m & MEDIA_AVAILABLE))
     {
+        mLogger.logmsg(LOGLEVEL_INFO, "Remove from device set");
+        mDeviceMap.erase(dev);
         return;
     }
 
+    if (inDeviceSet(dev)) {
+        mLogger.logmsg(LOGLEVEL_INFO, "Device already in device set");
+        return;
+    }
     if (!d.AutoMount(mountpath)) {
         mLogger.logmsg(LOGLEVEL_INFO, "Automount failed");
         return;
@@ -149,5 +173,26 @@ void cFileDetector::startScan (cMediaHandle d)
 
 void cFileDetector::endScan (cMediaHandle d)
 {
-    d.Umount();
+    cExtString dev = d.GetDeviceFile();
+    mDeviceMap[dev] = d.GetPath();
+    if (!mMountPath.empty()) {
+        d.Umount();
+        mLogger.logmsg(LOGLEVEL_INFO, "Mounting to %s", mMountPath.c_str());
+        Mount(dev);
+    }
+}
+
+void cFileDetector::removeDevice (cMediaHandle d)
+{
+    cExtString path = d.GetPath();
+    mLogger.logmsg(LOGLEVEL_INFO, "Removing %s", path.c_str());
+    StringMap::iterator it;
+    cExtString s;
+    for (it = mDeviceMap.begin(); it != mDeviceMap.end(); it++) {
+        if (it->second == path) {
+            mLogger.logmsg(LOGLEVEL_INFO, "Found %s", it->first.c_str());
+            mDeviceMap.erase (it);
+            return;
+        }
+    }
 }

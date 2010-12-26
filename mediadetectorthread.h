@@ -21,7 +21,7 @@ private:
     cMediaDetector mDetector;
     std::string mPluginName;
 #ifdef DEBUG
-    void logkeylist(ValueList vl);
+    void logkeylist(cExtStringVector vl);
 #endif
 
 public:

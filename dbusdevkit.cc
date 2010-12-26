@@ -83,7 +83,7 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
     return true;
 }
 
-bool cDbusDevkit::WaitDevkit(int timeout, string &retpath)
+bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal)
 {
     DBusMessage *devkitmsg;
     bool sigrcv = false;
@@ -100,10 +100,18 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath)
             mLogger.logmsg(LOGLEVEL_INFO, "Message received %s\n Member %s",
                     dbus_message_get_interface(devkitmsg),
                     dbus_message_get_member(devkitmsg));
-
+            signal = Unkown;
             // check if the message is a signal from the correct interface and with the correct name
-            if ((dbus_message_is_signal(devkitmsg, mService, "DeviceAdded")) ||
-                (dbus_message_is_signal(devkitmsg, mService, "DeviceChanged"))) {
+            if (dbus_message_is_signal(devkitmsg, mService, "DeviceAdded")) {
+                signal = DeviceAdded;
+            }
+            else if (dbus_message_is_signal(devkitmsg, mService, "DeviceRemoved")) {
+                signal = DeviceRemoved;
+            }
+            else if (dbus_message_is_signal(devkitmsg, mService, "DeviceChanged")) {
+                signal = DeviceChanged;
+            }
+            if (signal != Unkown) {
                 // read the parameters
                 DBusMessageIter iter;
                 path = NULL;
@@ -303,24 +311,27 @@ bool cDbusDevkit::GetDbusPropertyB (const string &path,
     return retval;
 }
 
-DBusMessage *cDbusDevkit::CallInterface (const string &path, const string &name)
+string cDbusDevkit::AutoMount(const string path)
     throw (cDeviceKitException)
 {
     DBusMessage *msg, *getmsg;
-    const char *dev_inter = "";
-    char *dbusarr[] = {};
+    const char *fs_type = "";
+    const char *opts[] = {NULL};
+    char *val;
+    int argcnt = 0;
+    string retval;
 
     getmsg = dbus_message_new_method_call(mService,   // target for the method call
                                        path.c_str(),                // object to call on
                                        mDevicekitInterface.c_str(), // interface to call on
-                                       name.c_str());              // method name
+                                       "FilesystemMount");              // method name
     if (getmsg == NULL) {
         DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
     }
 
     dbus_message_append_args (getmsg,
-                           DBUS_TYPE_STRING, &dev_inter,
-                           DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, dbusarr, 0,
+                           DBUS_TYPE_STRING, &fs_type,
+                           DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, opts, &argcnt,
                            DBUS_TYPE_INVALID);
     msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
                                                           -1,  &mErr);
@@ -331,20 +342,7 @@ DBusMessage *cDbusDevkit::CallInterface (const string &path, const string &name)
         DEVKITEXCEPTION(errmsg);
     }
 
-    // free message
-    dbus_message_unref(getmsg);
-    return (msg);
-}
-
-string cDbusDevkit::CallInterfaceS(const string &path,
-                                       const string &name)
-    throw (cDeviceKitException)
-{
-    DBusMessage *msg = CallInterface (path, name);
     DBusMessageIter args;
-    char *val;
-    string retval;
-
     // read the parameters
     if (!dbus_message_iter_init(msg, &args)) {
         dbus_message_unref(msg);
@@ -367,24 +365,28 @@ void cDbusDevkit::CallInterfaceV(const string &path,
                                        const string &name)
     throw (cDeviceKitException)
 {
-    DBusMessage *msg = CallInterface (path, name);
-    DBusMessageIter args;
-    char *val;
-    string retval;
+    DBusMessage *msg, *getmsg;
+    char *dbusarr[] = {};
 
-    // read the parameters
-    if (!dbus_message_iter_init(msg, &args)) {
-        dbus_message_unref(msg);
-        DEVKITEXCEPTION("Message has no arguments!");
+    getmsg = dbus_message_new_method_call(mService,   // target for the method call
+                                       path.c_str(),                // object to call on
+                                       mDevicekitInterface.c_str(), // interface to call on
+                                       name.c_str());              // method name
+    if (getmsg == NULL) {
+        DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
     }
 
-    int msgtype = dbus_message_iter_get_arg_type(&args);
-    if (msgtype != DBUS_TYPE_STRING) {
-        dbus_message_unref (msg);
-        mLogger.logmsg(LOGLEVEL_ERROR, "Return value is not String %c!\n", msgtype);
-        DEVKITEXCEPTION("Return value is not String");
+    dbus_message_append_args (getmsg,
+                           DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, dbusarr, 0,
+                           DBUS_TYPE_INVALID);
+    msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                                                          -1,  &mErr);
+    if (dbus_error_is_set(&mErr)) {
+        string errmsg = "dbus_connection_send_with_reply failed";
+        errmsg += mErr.message;
+        dbus_error_free(&mErr);
+        DEVKITEXCEPTION(errmsg);
     }
-    dbus_message_iter_get_basic(&args, &val);
-    retval = val;
+
     dbus_message_unref (msg);
 }

@@ -17,18 +17,21 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <queue>
 #include <algorithm>
 
 #include "extstring.h"
 #include "logger.h"
 
-typedef std::vector<cExtString> ValueList;
-typedef std::map<cExtString, ValueList> Key;
+typedef std::queue<cExtString> cExtStringQueue;
+typedef std::vector<cExtString> cExtStringVector;
+typedef std::map<cExtString, cExtStringVector> Key;
 typedef std::map<cExtString, Key> Section;
 
 class cConfigFileParser {
 private:
-    Section sections;
+    static std::string mWhiteSpace;
+    Section mSections;
     cExtString mCurrSection;
     cLogger mLogger;
 
@@ -36,8 +39,8 @@ private:
     void AddSection (cExtString , cExtString , const cExtString);
     bool isSection (const cExtString &token, cExtString &section);
     bool isComment (const cExtString &token) {return (token.at(0) == ';');}
-    bool ParseLine (const cExtString &line);
-
+    bool ParseLine (const cExtString line);
+    cExtStringQueue TokenizeLine (const cExtString line);
 public:
     cConfigFileParser() {}
     cConfigFileParser(cLogger l) {mLogger = l;}
@@ -45,7 +48,7 @@ public:
     bool GetFirstSection (Section::iterator &iter,cExtString &sectionname);
     bool GetNextSection (Section::iterator &iter, cExtString &sectionname);
     bool GetValues (const cExtString sectionname, const cExtString key,
-                      ValueList &values);
+                      cExtStringVector &values);
     bool GetSingleValue (const cExtString sectionname, const cExtString key,
                            cExtString &values);
 };

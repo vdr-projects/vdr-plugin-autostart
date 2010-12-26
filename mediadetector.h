@@ -21,7 +21,7 @@
 
 class cMediaDetector {
 private:
-    typedef std::map<std::string, ValueList> PluginMap;
+    typedef std::map<std::string, cExtStringVector> PluginMap;
     typedef std::vector<cMediaTester *> MediaTesterVector;
     typedef std::set<std::string> FilterMap;
 
@@ -39,11 +39,11 @@ private:
     void RegisterTester(const cMediaTester *, const cConfigFileParser &,
                           const cExtString);
     bool InDeviceFilter(const std::string dev);
-    bool DoDetect(const cMediaHandle, std::string &, ValueList &);
-
+    bool DoDetect(const cMediaHandle, std::string &, cExtStringVector &);
+    void DoDeviceRemoved(const cMediaHandle mediainfo);
 #ifdef DEBUG
-    void logkeylist (ValueList vl) {
-        ValueList::iterator it;
+    void logkeylist (cExtStringVector vl) {
+        cExtStringVector::iterator it;
         for (it = vl.begin(); it != vl.end(); it++) {
             mLogger.logmsg(LOGLEVEL_INFO, "   %s", it->c_str());
         }
@@ -57,6 +57,6 @@ public:
     void Stop(void) { running = false; };
     // Wait for a media change, detect the media and return the associated
     // key list and media information.
-    ValueList Detect(std::string &description, cMediaHandle &mediainfo);
+    cExtStringVector Detect(std::string &description, cMediaHandle &mediainfo);
 };
 #endif /* MEDIADETECTOR_H_ */

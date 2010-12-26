@@ -19,7 +19,7 @@ static const char *autostart_service_id = "AutostartPlugin-V0.0.1";
 typedef struct _autostart_service {
     std::string mDescription;
     std::string mMountPath;
-    ValueList mKeyList;
+    cExtStringVector mKeyList;
     cMediaHandle mMediaDescr;
     bool mSendToOwn;
 } AutoStartService;

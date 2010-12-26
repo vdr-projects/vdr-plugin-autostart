@@ -2,7 +2,7 @@
 #include "videodvdtester.h"
 #include <dvdread/dvd_reader.h>
 
-bool cVideoDVDTester::isMedia (cMediaHandle d, ValueList &keylist)
+bool cVideoDVDTester::isMedia (cMediaHandle d, cExtStringVector &keylist)
 {
     dvd_reader_t *reader;
     dvd_file_t *file;

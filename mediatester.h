@@ -38,7 +38,7 @@ private:
     MEDIA_MASK_T mMediaMask;
     cDbusDevkit *mDevKit;
     cLogger mLogger;
-    bool automounted;
+    bool mAutomounted;
 
 public:
     cMediaHandle() {};
@@ -50,25 +50,27 @@ public:
     MEDIA_MASK_T GetMediaMask(void) {return (mMediaMask);}
     bool AutoMount(cExtString &mountpath);
     void Umount(void);
+    bool isAutoMounted (void) {return mAutomounted;}
 };
 
 class cMediaTester
 {
 protected:
     cLogger mLogger;
-    ValueList mKeylist;
+    cExtStringVector mKeylist;
     std::string mDescription;
     std::string mExt;
 
 public:
     virtual bool loadConfig (cConfigFileParser config,
                                 const cExtString sectionname);
-    virtual bool isMedia (cMediaHandle d, ValueList &keylist) = 0;
+    virtual bool isMedia (cMediaHandle d, cExtStringVector &keylist) = 0;
     virtual cMediaTester *create(cLogger) const = 0;
     bool typeMatches (const cExtString name) const;
     virtual void startScan (cMediaHandle d) {};
     virtual void endScan (cMediaHandle d) {};
-    ValueList getList (cConfigFileParser config,
+    virtual void removeDevice (cMediaHandle d) {};
+    cExtStringVector getList (cConfigFileParser config,
                         const cExtString sectionname,
                         const cExtString key);
     std::string GetDescription(void) {return mDescription;}

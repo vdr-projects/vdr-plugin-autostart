@@ -2,7 +2,7 @@
 #include "cdiotester.h"
 #include <cdio/cdda.h>
 
-bool cCdioTester::isMedia (cMediaHandle d, ValueList &keylist)
+bool cCdioTester::isMedia (cMediaHandle d, cExtStringVector &keylist)
 {
     CdIo_t *cdio;
     bool ismedia = TRUE;
