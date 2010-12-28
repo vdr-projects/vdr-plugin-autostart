@@ -18,8 +18,8 @@ bool cCdioTester::isMedia (cMediaHandle d, cExtStringVector &keylist)
     }
     cdio = cdio_open(d.GetDeviceFile().c_str(), DRIVER_DEVICE);
     if (cdio == NULL) {
-        printf("Can not open %s", d.GetNativePath().c_str());
-        //esyslog("%s %d Can not open %s", __FILE__, __LINE__, FileName.c_str());
+        mLogger->logmsg(LOGLEVEL_ERROR, "Can not open %s",
+                                         d.GetNativePath().c_str());
         return false;
     }
 

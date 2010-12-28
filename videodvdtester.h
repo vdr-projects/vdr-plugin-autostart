@@ -13,13 +13,13 @@
 class cVideoDVDTester : public cMediaTester
 {
 public:
-    cVideoDVDTester(cLogger l, std::string descr, std::string ext) {
+    cVideoDVDTester(cLogger *l, std::string descr, std::string ext) {
         mLogger = l;
         mDescription = descr;
         mExt = ext;
     }
     bool isMedia(cMediaHandle d, cExtStringVector &keylist);
-    cMediaTester *create(cLogger l) const {
+    cMediaTester *create(cLogger *l) const {
         return new cVideoDVDTester(l, mDescription, mExt);
     }
 };

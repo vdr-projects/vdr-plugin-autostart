@@ -39,7 +39,7 @@ class cDbusDevkit {
   private:
     DBusConnection *mConnSystem;
     DBusError mErr;
-    cLogger mLogger;
+    cLogger *mLogger;
 
     static const char *DEVICEKIT_DISKS_SERVICE;
     static const char *UDISKS_SERVICE;
@@ -83,9 +83,10 @@ class cDbusDevkit {
         DeviceChanged,
         Unkown
     } DEVICE_SIGNAL;
-    cDbusDevkit();
 
-    void SetLogger (cLogger logger) { mLogger = logger; }
+    cDbusDevkit(cLogger *logger);
+
+   // void SetLogger (cLogger *logger) { mLogger = logger; }
 
     bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
 

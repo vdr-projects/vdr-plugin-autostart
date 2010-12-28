@@ -29,7 +29,7 @@ private:
     PluginMap mPlugins;
     cConfigFileParser mConfigFileParser;
     cDbusDevkit mDevkit;
-    cLogger mLogger;
+    cLogger *mLogger;
     MediaTesterVector mMediaTesters;
     volatile bool running;
 
@@ -39,21 +39,22 @@ private:
     void RegisterTester(const cMediaTester *, const cConfigFileParser &,
                           const cExtString);
     bool InDeviceFilter(const std::string dev);
-    bool DoDetect(const cMediaHandle, std::string &, cExtStringVector &);
-    void DoDeviceRemoved(const cMediaHandle mediainfo);
+    bool DoDetect(cMediaHandle &, std::string &, cExtStringVector &);
+    void DoDeviceRemoved(cMediaHandle mediainfo);
 #ifdef DEBUG
     void logkeylist (cExtStringVector vl) {
         cExtStringVector::iterator it;
         for (it = vl.begin(); it != vl.end(); it++) {
-            mLogger.logmsg(LOGLEVEL_INFO, "   %s", it->c_str());
+            mLogger->logmsg(LOGLEVEL_INFO, "   %s", it->c_str());
         }
     }
 #endif
 
 public:
-    cMediaDetector() {running = false; };
+    cMediaDetector(cLogger *l) :
+        mConfigFileParser(l), mDevkit(l), running(false) {};
     ~cMediaDetector();
-    bool InitDetector(cLogger logger, const cExtString initfile);
+    bool InitDetector(cLogger *logger, const cExtString initfile);
     void Stop(void) { running = false; };
     // Wait for a media change, detect the media and return the associated
     // key list and media information.

@@ -17,7 +17,8 @@
 
 class cMediaDetectorThread : public cThread {
 private:
-    cLogger mLogger;
+    // cLogger mLogger; // Log to stdout
+    cVdrLogger mLogger; // Use VDR Logging
     cMediaDetector mDetector;
     std::string mPluginName;
 #ifdef DEBUG
@@ -25,9 +26,10 @@ private:
 #endif
 
 public:
+    cMediaDetectorThread() : mDetector(&mLogger) {};
     bool InitDetector(const std::string inifile, const std::string pluginname) {
         mPluginName = pluginname;
-        return mDetector.InitDetector(mLogger, inifile);
+        return mDetector.InitDetector(&mLogger, inifile);
     }
     virtual void Action(void);
     void Stop(void) {

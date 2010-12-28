@@ -24,12 +24,12 @@ bool cVideoDVDTester::isMedia (cMediaHandle d, cExtStringVector &keylist)
     }
     reader = DVDOpen (d.GetDeviceFile().c_str());
     if (reader == NULL) {
-        mLogger.logmsg(LOGLEVEL_INFO, "Can not open %s", d.GetDeviceFile().c_str());
+        mLogger->logmsg(LOGLEVEL_INFO, "Can not open %s", d.GetDeviceFile().c_str());
         return false;
     }
     file = DVDOpenFile(reader, 0, DVD_READ_INFO_FILE );
     if (file == NULL) {
-        mLogger.logmsg(LOGLEVEL_INFO, "not a dvd");
+        mLogger->logmsg(LOGLEVEL_INFO, "not a dvd");
         success = false;
     }
     DVDClose (reader);

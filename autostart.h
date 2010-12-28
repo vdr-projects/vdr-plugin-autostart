@@ -19,6 +19,20 @@
 static const char *VERSION        = "0.0.1";
 static const char *DESCRIPTION    = trNOOP("Start a plugin automatically");
 
+class cSenderThread : public cThread {
+private:
+    AutoStartService as;
+public:
+    void Run(const AutoStartService s) {
+        while (Active()) {
+            sleep(1);
+        }
+        as = s;
+        Start();
+    }
+    virtual void Action(void);
+};
+
 class cPluginAutostart: public cPlugin {
 private:
     static std::string mCfgDir;
@@ -26,6 +40,7 @@ private:
     cMutex mAutostartMutex;
     AutoStartService mAutoStartService;
     cMediaDetectorThread mDetector;
+    cSenderThread mSender;
 
     static const std::string GetConfigDir(void) {
         const std::string cfdir = cPlugin::ConfigDirectory();

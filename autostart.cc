@@ -107,22 +107,23 @@ bool cPluginAutostart::SetupParse(const char *Name, const char *Value)
 
 bool cPluginAutostart::Service(const char *Id, void *Data)
 {
+    if (Data == NULL) {
+        return false;
+    }
     dsyslog("Service %s received\n", Id);
     cMutexLock MutexLock(&mAutostartMutex);
     if (strcmp(Id, autostart_service_id) == 0) {
-        if (Data) {
-            AutoStartService *se = (AutoStartService *)Data;
-            if (se->mSendToOwn) {
-                dsyslog("Descr %s", se->mDescription.c_str());
-                ProcessService(*se);
-                return true;
-            }
+        AutoStartService *se = (AutoStartService *) Data;
+        if (se->mSendToOwn) {
+            dsyslog("Descr %s", se->mDescription.c_str());
+            mSender.Run(*se);
+            return true;
         }
     }
     return false;
 }
 
-void cPluginAutostart::ProcessService(const AutoStartService as)
+void cSenderThread::Action(void)
 {
     cExtStringVector vl = as.mKeyList;
     cExtStringVector::iterator it;
@@ -130,6 +131,7 @@ void cPluginAutostart::ProcessService(const AutoStartService as)
 
     for (it = vl.begin(); it != vl.end(); it++) {
         string key = *it;
+        dsyslog("Send key %s", key.c_str());
         switch (key[0]) {
         case '@':      // Plugin
             key.erase(0,1);
@@ -138,18 +140,22 @@ void cPluginAutostart::ProcessService(const AutoStartService as)
                 esyslog("Plugin %s not available", key.c_str());
                 return;
             }
-            p->MainMenuAction();
+            cRemote::CallPlugin(key.c_str());
+            usleep(500);
             break;
-        case '#':       // Script
+/*        case '#':       // Script
             key.erase(0,1);
-            break;
+            break;*/
         default:        // Key
             eKeys keycode = cKey::FromString(key.c_str());
             if (keycode == kNone) {
                 esyslog("Unkown key %s", key.c_str());
                 return;
             }
+
             cRemote::Put (keycode);
+
+            usleep(500);
             break;
         }
     }

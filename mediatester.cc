@@ -48,29 +48,29 @@ bool cMediaHandle::GetDescription (cDbusDevkit &d,
         }
     }
     catch (cDeviceKitException &e) {
-        mLogger.logmsg(LOGLEVEL_WARNING, "DeviceKit Error %s", e.what());
+        mLogger->logmsg(LOGLEVEL_WARNING, "DeviceKit Error %s", e.what());
         success = false;
     }
     return (success);
 }
 
-bool cMediaHandle::AutoMount(cExtString &mountpath)
+bool cMediaHandle::AutoMount(void)
 {
     int i;
 
+    mMountPath.clear();
     for(i = 0; i < 3; i++)
     {
         try {
             if (!mDevKit->IsMounted(mPath)) {
-                mLogger.logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
+                mLogger->logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
                         mDevKit->AutoMount(mPath).c_str());
-                mAutomounted = true;
             }
-            mountpath = mDevKit->GetMountPaths(mPath).at(0);
-            mLogger.logmsg(LOGLEVEL_INFO, "Mount Path %s", mountpath.c_str());
+            mMountPath = mDevKit->GetMountPaths(mPath).at(0);
+            mLogger->logmsg(LOGLEVEL_INFO, "Mount Path %s", mMountPath.c_str());
             return true;
         } catch (cDeviceKitException &e) {
-            mLogger.logmsg(LOGLEVEL_ERROR, "AutoMount DeviceKit Error %s", e.what());
+            mLogger->logmsg(LOGLEVEL_ERROR, "AutoMount DeviceKit Error %s", e.what());
         }
         sleep(1);
     }
@@ -79,11 +79,8 @@ bool cMediaHandle::AutoMount(cExtString &mountpath)
 
 void cMediaHandle::Umount(void)
 {
-    if (!mAutomounted) {
-        return;
-    }
     mDevKit->UnMount(mPath);
-    mAutomounted = false;
+    mMountPath.clear();
 }
 
 cExtStringVector cMediaTester::getList (cConfigFileParser config,
@@ -92,14 +89,14 @@ cExtStringVector cMediaTester::getList (cConfigFileParser config,
 {
     cExtStringVector vals;
     if (!config.GetValues(sectionname, key, vals)) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "No %s specified in section %s",
+        mLogger->logmsg(LOGLEVEL_ERROR, "No %s specified in section %s",
                 key.c_str(), sectionname.c_str());
         exit(-1);
     }
 
     cExtStringVector::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
-        mLogger.logmsg(LOGLEVEL_INFO, "ADD %s %s", key.c_str(), it->c_str());
+        mLogger->logmsg(LOGLEVEL_INFO, "ADD %s %s", key.c_str(), it->c_str());
     }
     return vals;
 }

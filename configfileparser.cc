@@ -120,7 +120,7 @@ bool cConfigFileParser::ParseLine (const cExtString line)
                 if (isComment(token)) {
                     return true;
                 } else {
-                    mLogger.logmsg(LOGLEVEL_ERROR, "Syntax error on section");
+                    mLogger->logmsg(LOGLEVEL_ERROR, "Syntax error on section");
                     return false;
                 }
             }
@@ -133,13 +133,13 @@ bool cConfigFileParser::ParseLine (const cExtString line)
                 key = token;
             }
             else {
-                mLogger.logmsg (LOGLEVEL_ERROR,"Missing =");
+                mLogger->logmsg (LOGLEVEL_ERROR,"Missing =");
                 return false;
             }
         }
         else if (token == "=") {
             if (keysep) {
-                mLogger.logmsg (LOGLEVEL_ERROR,"Duplicate =");
+                mLogger->logmsg (LOGLEVEL_ERROR,"Duplicate =");
                 return false;
             }
             keysep = true;
@@ -162,7 +162,7 @@ bool cConfigFileParser::Parse(const cExtString fname)
     mFile.open(fname.c_str());
     if (!mFile.is_open()) {
         string err = "Can not open file " + fname;
-        mLogger.logmsg (LOGLEVEL_ERROR,err.c_str());
+        mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
         return false;
     }
 
@@ -173,7 +173,7 @@ bool cConfigFileParser::Parse(const cExtString fname)
     }
     if (!mFile.eof()) {
         string err = "Read error on file " + fname;
-        mLogger.logmsg (LOGLEVEL_ERROR,err.c_str());
+        mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
         return false;
     }
     return true;
@@ -194,13 +194,13 @@ bool cConfigFileParser::GetValues (const cExtString sectionname,
     seciter = mSections.find(section);
     if (seciter == mSections.end()) {
         string err = "Can not find section " + section;
-        mLogger.logmsg(LOGLEVEL_ERROR,err.c_str());
+        mLogger->logmsg(LOGLEVEL_ERROR,err.c_str());
         return false;
     }
     kl = seciter->second;
     keyiter = kl.find(k);
     if (keyiter == kl.end()) {
-        mLogger.logmsg(LOGLEVEL_ERROR,"Can not find key %s\n",k.c_str());
+        mLogger->logmsg(LOGLEVEL_ERROR,"Can not find key %s\n",k.c_str());
         return false;
     }
     values = keyiter->second;
@@ -221,7 +221,7 @@ bool cConfigFileParser::GetSingleValue (const cExtString sectionname,
     }
     if (vals.size() != 1) {
         string err = "More than one argument to " + sectionname +  " key " + key;
-        mLogger.logmsg(LOGLEVEL_ERROR,err.c_str());
+        mLogger->logmsg(LOGLEVEL_ERROR,err.c_str());
         return false;
     }
     value = vals[0];

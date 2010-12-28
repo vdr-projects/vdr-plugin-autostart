@@ -33,7 +33,7 @@ private:
     static std::string mWhiteSpace;
     Section mSections;
     cExtString mCurrSection;
-    cLogger mLogger;
+    cLogger *mLogger;
 
     void AddKey (Key &, const cExtString &, const cExtString &);
     void AddSection (cExtString , cExtString , const cExtString);
@@ -42,8 +42,8 @@ private:
     bool ParseLine (const cExtString line);
     cExtStringQueue TokenizeLine (const cExtString line);
 public:
-    cConfigFileParser() {}
-    cConfigFileParser(cLogger l) {mLogger = l;}
+   // cConfigFileParser() {}
+    cConfigFileParser(cLogger *l) {mLogger = l;}
     bool Parse (const cExtString filename);
     bool GetFirstSection (Section::iterator &iter,cExtString &sectionname);
     bool GetNextSection (Section::iterator &iter, cExtString &sectionname);

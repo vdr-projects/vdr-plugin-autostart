@@ -35,28 +35,30 @@ private:
     cExtString mNativePath;
     cExtString mDeviceFile;
     cExtString mType;
+    cExtString mMountPath;
     MEDIA_MASK_T mMediaMask;
     cDbusDevkit *mDevKit;
-    cLogger mLogger;
-    bool mAutomounted;
+    cLogger *mLogger;
 
 public:
-    cMediaHandle() {};
+    cMediaHandle() {mLogger = NULL; mDevKit = NULL;}
+    cMediaHandle(cLogger *l) { mLogger = l; mDevKit = NULL; }
     bool GetDescription(cDbusDevkit &d, const std::string &path);
     cExtString GetNativePath(void) {return mNativePath;}
     cExtString GetDeviceFile(void) {return mDeviceFile;}
-    cExtString GetType(void) {return (mType);}
-    cExtString GetPath(void) {return (mPath);}
-    MEDIA_MASK_T GetMediaMask(void) {return (mMediaMask);}
-    bool AutoMount(cExtString &mountpath);
+    cExtString GetType(void) {return mType;}
+    cExtString GetPath(void) {return mPath;}
+    cExtString GetMountPath (void) {return mMountPath;}
+    MEDIA_MASK_T GetMediaMask(void) {return mMediaMask;}
+    bool AutoMount(void);
     void Umount(void);
-    bool isAutoMounted (void) {return mAutomounted;}
+    bool isAutoMounted (void) {return (!mMountPath.empty());}
 };
 
 class cMediaTester
 {
 protected:
-    cLogger mLogger;
+    cLogger *mLogger;
     cExtStringVector mKeylist;
     std::string mDescription;
     std::string mExt;
@@ -65,14 +67,15 @@ public:
     virtual bool loadConfig (cConfigFileParser config,
                                 const cExtString sectionname);
     virtual bool isMedia (cMediaHandle d, cExtStringVector &keylist) = 0;
-    virtual cMediaTester *create(cLogger) const = 0;
-    bool typeMatches (const cExtString name) const;
-    virtual void startScan (cMediaHandle d) {};
-    virtual void endScan (cMediaHandle d) {};
+    virtual cMediaTester *create(cLogger *) const = 0;
+    virtual void startScan (cMediaHandle &d) {};
+    virtual void endScan (cMediaHandle &d) {};
     virtual void removeDevice (cMediaHandle d) {};
     cExtStringVector getList (cConfigFileParser config,
                         const cExtString sectionname,
                         const cExtString key);
+
+    bool typeMatches (const cExtString name) const;
     std::string GetDescription(void) {return mDescription;}
 };
 

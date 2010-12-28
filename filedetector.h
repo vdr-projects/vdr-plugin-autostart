@@ -11,6 +11,7 @@
 #ifndef FILEDETECTOR_H_
 #define FILEDETECTOR_H_
 
+#include <unistd.h>
 #include <string>
 #include <set>
 #include <map>
@@ -20,35 +21,41 @@
 
 class cFileDetector : public cMediaTester {
 public:
-    cFileDetector(cLogger l, std::string descr, std::string ext) {
+    cFileDetector(cLogger *l, std::string descr, std::string ext) {
         mLogger = l;
         mDescription = descr;
         mExt = ext;
-        mConfiguredMountProg = "/bin/mount";
+        mConfiguredAutoMount = true;
     }
 
     bool isMedia (const cMediaHandle d, cExtStringVector &keylist);
-    cMediaTester *create(cLogger l) const {
+    cMediaTester *create(cLogger *l) const {
         return new cFileDetector(l, mDescription, mExt);
     }
     bool loadConfig (cConfigFileParser config,
                        const cExtString sectionname);
-    void startScan (cMediaHandle d);
-    void endScan (cMediaHandle d);
+    void startScan (cMediaHandle &d);
+    void endScan (cMediaHandle &d);
     void removeDevice (cMediaHandle d);
 
 private:
+    typedef struct {
+        cExtString devPath;
+        cExtString linkPath;
+    } DEVINFO;
     typedef std::set<cExtString> StringSet;
-    typedef std::map<cExtString, cExtString> StringMap;
-    static StringSet mSuffix;
+    typedef std::map<cExtString, DEVINFO> DevMap;
+
     static StringSet mDetectedSuffixCache;
     // Devices which are already processed
-    static StringMap mDeviceMap;
-    static std::string mMountPath;
-    static std::string mMountProg;
+    static DevMap mDeviceMap;
+    static std::string mLinkPath;
+    static bool mAutoMount;
 
-    cExtString mConfiguredMountPath;
-    cExtString mConfiguredMountProg;
+    StringSet mSuffix;
+    cExtString mConfiguredLinkPath;
+    bool mConfiguredAutoMount;
+
 
     void ClearSuffixCache (void) {mDetectedSuffixCache.clear();}
     bool FindSuffix (const cExtString str);
@@ -57,11 +64,8 @@ private:
     bool inDeviceSet(const cExtString dev) {
         return (mDeviceMap.find(dev) != mDeviceMap.end());
     }
-    void Mount(const cExtString dev) {
-        std::string cmd = mMountProg + " \"" + dev + "\" \"" + mMountPath + "\"";
-        mLogger.logmsg(LOGLEVEL_INFO, cmd.c_str());
-        system (cmd.c_str());
-    }
+    bool RmLink(const cExtString ln);
+    void Link(const cExtString ln);
 };
 
 #endif /* FILEDETECTOR_H_ */

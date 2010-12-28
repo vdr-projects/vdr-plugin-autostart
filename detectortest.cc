@@ -30,12 +30,12 @@ void logkeylist(cExtStringVector vl)
 int main()
 {
     cLogger log;
-    cMediaDetector detector;
+    cMediaDetector detector(&log);
     cExtStringVector vl;
     string descr;
     cMediaHandle ha;
 
-    detector.InitDetector(log, "/tmp/test.conf");
+    detector.InitDetector(&log, "/tmp/test.conf");
     while (true) {
         vl = detector.Detect(descr, ha);
         log.logmsg(LOGLEVEL_ERROR, "\n%s Keylist : ", descr.c_str());

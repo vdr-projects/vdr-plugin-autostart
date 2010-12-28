@@ -23,9 +23,10 @@ cDeviceKitException::cDeviceKitException (const char *file, int line,
     mErrTxt = fn + buf + errtxt;
 }
 
-cDbusDevkit::cDbusDevkit()
+cDbusDevkit::cDbusDevkit(cLogger *logger)
 {
     mConnSystem = NULL;
+    mLogger = logger;
     // initialize the errors
     dbus_error_init(&mErr);
 }
@@ -39,7 +40,7 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
 
     mConnSystem = dbus_bus_get (DBUS_BUS_SYSTEM, &mErr);
     if (dbus_error_is_set(&mErr)) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Connection Error (%s)", mErr.message);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Connection Error (%s)", mErr.message);
         dbus_error_free(&mErr);
     }
     if (mConnSystem  == NULL) {
@@ -50,19 +51,19 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
     mService = DEVICEKIT_DISKS_SERVICE;
     if (!dbus_bus_start_service_by_name(mConnSystem, mService, 0,
                                         NULL, &mErr)) {
-        mLogger.logmsg(LOGLEVEL_INFO, "Probe DeviceKit Disks (%s)", mErr.message);
+        mLogger->logmsg(LOGLEVEL_INFO, "Probe DeviceKit Disks (%s)", mErr.message);
         dbus_error_free(&mErr);
         mService = UDISKS_SERVICE;
         if (!dbus_bus_start_service_by_name(mConnSystem, mService, 0,
                                         NULL, &mErr)) {
-            mLogger.logmsg(LOGLEVEL_ERROR, "No connection (%s)", mErr.message);
+            mLogger->logmsg(LOGLEVEL_ERROR, "No connection (%s)", mErr.message);
             dbus_error_free(&mErr);
             return false;
         }
-        mLogger.logmsg(LOGLEVEL_WARNING, "UDisks found");
+        mLogger->logmsg(LOGLEVEL_WARNING, "UDisks found");
     }
     else {
-        mLogger.logmsg(LOGLEVEL_WARNING, "Devicekit Disks found");
+        mLogger->logmsg(LOGLEVEL_WARNING, "Devicekit Disks found");
     }
 
     mDevicekitInterface = mService;
@@ -76,7 +77,7 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
     // add a filter for the messages we want to see
     dbus_bus_add_match (mConnSystem, rule.c_str(), &mErr); // see signals from the given interface
     if (dbus_error_is_set(&mErr)) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Match Error (%s)", mErr.message);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Match Error (%s)", mErr.message);
         return false;
     }
 
@@ -97,7 +98,7 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
         dbus_connection_read_write(mConnSystem, timeout);
         devkitmsg = dbus_connection_pop_message(mConnSystem);
         if (devkitmsg != NULL) {
-            mLogger.logmsg(LOGLEVEL_INFO, "Message received %s\n Member %s",
+            mLogger->logmsg(LOGLEVEL_INFO, "Message received %s\n Member %s",
                     dbus_message_get_interface(devkitmsg),
                     dbus_message_get_member(devkitmsg));
             signal = Unkown;
@@ -116,11 +117,11 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
                 DBusMessageIter iter;
                 path = NULL;
                 if (!dbus_message_iter_init(devkitmsg, &iter)) {
-                    mLogger.logmsg(LOGLEVEL_WARNING, "Signal has no argument!");
+                    mLogger->logmsg(LOGLEVEL_WARNING, "Signal has no argument!");
                 } else {
                     int type = dbus_message_iter_get_arg_type(&iter);
                     if (type != DBUS_TYPE_OBJECT_PATH) {
-                        mLogger.logmsg(LOGLEVEL_WARNING, "Argument is not object path");
+                        mLogger->logmsg(LOGLEVEL_WARNING, "Argument is not object path");
                     } else {
                         dbus_message_iter_get_basic(&iter, &path);
                     }
@@ -128,7 +129,7 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
 
                 if (path != NULL) {
                     // read the parameters
-                    mLogger.logmsg(LOGLEVEL_INFO, "DeviceChange Signal for %s", path);
+                    mLogger->logmsg(LOGLEVEL_INFO, "DeviceChange Signal for %s", path);
                     retpath = path;
                     sigrcv = true;
                 }
@@ -187,7 +188,7 @@ DBusMessage *cDbusDevkit::CallDbusProperty (const string &path,
     int msgtype = dbus_message_iter_get_arg_type(iter);
     if (msgtype != DBUS_TYPE_VARIANT) {
         dbus_message_unref(msg);
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
         DEVKITEXCEPTION("Argument is not Variant " + name);
     }
     return msg;
@@ -207,7 +208,7 @@ string cDbusDevkit::GetDbusPropertyS (const string &path,
     dbus_message_iter_recurse(&iter, &subiter);
     int msgtype = dbus_message_iter_get_arg_type(&subiter);
     if (msgtype != DBUS_TYPE_STRING) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not String %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not String %c!", msgtype);
         dbus_message_unref(msg);
         DEVKITEXCEPTION ("Argument is not a String");
     }
@@ -238,19 +239,19 @@ StringArray cDbusDevkit::GetDbusPropertyAS (const string &path,
 
     int msgtype = dbus_message_iter_get_arg_type(&iter);
     if (msgtype != DBUS_TYPE_VARIANT) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
         DEVKITEXCEPTION("Argument is not Variant");
     }
     dbus_message_iter_recurse(&iter, &subiter);
     msgtype = dbus_message_iter_get_arg_type(&subiter);
     if (msgtype != DBUS_TYPE_ARRAY) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not Array %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Array %c!", msgtype);
         DEVKITEXCEPTION("Argument is not Array");
     }
     dbus_message_iter_recurse(&subiter, &iter);
     msgtype = dbus_message_iter_get_arg_type(&iter);
     if (msgtype != DBUS_TYPE_STRING) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not String %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not String %c!", msgtype);
         DEVKITEXCEPTION("Argument is not Array");
     }
 
@@ -277,7 +278,7 @@ dbus_int32_t cDbusDevkit::GetDbusPropertyU (const string &path,
     dbus_message_iter_recurse(&iter, &subiter);
     int msgtype = dbus_message_iter_get_arg_type(&subiter);
     if (msgtype != DBUS_TYPE_UINT32) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not int %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not int %c!", msgtype);
         dbus_message_unref(msg);
         DEVKITEXCEPTION ("Argument is not int");
     }
@@ -301,7 +302,7 @@ bool cDbusDevkit::GetDbusPropertyB (const string &path,
     dbus_message_iter_recurse(&iter, &subiter);
     int msgtype = dbus_message_iter_get_arg_type(&subiter);
     if (msgtype != DBUS_TYPE_BOOLEAN) {
-        mLogger.logmsg(LOGLEVEL_ERROR, "Argument is not bool %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not bool %c!", msgtype);
         dbus_message_unref(msg);
         DEVKITEXCEPTION ("Argument is not bool");
     }
@@ -352,7 +353,7 @@ string cDbusDevkit::AutoMount(const string path)
     int msgtype = dbus_message_iter_get_arg_type(&args);
     if (msgtype != DBUS_TYPE_STRING) {
         dbus_message_unref (msg);
-        mLogger.logmsg(LOGLEVEL_ERROR, "Return value is not String %c!", msgtype);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Return value is not String %c!", msgtype);
         DEVKITEXCEPTION("Return value is not String");
     }
     dbus_message_iter_get_basic(&args, &val);

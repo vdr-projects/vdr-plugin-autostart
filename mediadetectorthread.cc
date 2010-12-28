@@ -21,7 +21,7 @@ void cMediaDetectorThread::logkeylist(cExtStringVector vl)
     cLogger log;
     cExtStringVector::iterator it;
     for (it = vl.begin(); it != vl.end(); it++) {
-        log.logmsg(LOGLEVEL_ERROR, "   %s", it->c_str());
+        mLogger.logmsg(LOGLEVEL_ERROR, "   %s", it->c_str());
     }
 }
 #endif
@@ -31,28 +31,31 @@ void cMediaDetectorThread::Action(void)
     cExtStringVector vl;
     cPlugin *p;
     AutoStartService service;
-    cMediaHandle mediadescr;
+    cMediaHandle mediadescr(&mLogger);
     string des;
 
+    sleep(5);
     while (Running()) {
         vl = mDetector.Detect(des, mediadescr);
-        service.mDescription = des;
-        service.mKeyList = vl;
-        service.mMediaDescr = mediadescr;
-        // First send to service to own plugin
-        p = cPluginManager::GetPlugin(mPluginName.c_str());
-        if (p == NULL) {
-            mLogger.logmsg(LOGLEVEL_ERROR, "Own Plugin %s not found",
-                    mPluginName.c_str());
-            exit(-1);
+        if (!vl.empty()) {
+            service.mDescription = des;
+            service.mKeyList = vl;
+            service.mMediaDescr = mediadescr;
+            // First send to service to own plugin
+            p = cPluginManager::GetPlugin(mPluginName.c_str());
+            if (p == NULL) {
+                mLogger.logmsg(LOGLEVEL_ERROR, "Own Plugin %s not found",
+                        mPluginName.c_str());
+                exit(-1);
 
+            }
+            service.mSendToOwn = true;
+            p->Service(autostart_service_id, &service);
+
+            // Send to all plugins in case an other plugin is interested.
+            service.mSendToOwn = false;
+            cPluginManager::CallFirstService(autostart_service_id, &service);
         }
-        service.mSendToOwn = true;
-        p->Service(autostart_service_id, &service);
-
-        // Send to all plugins in case an other plugin is interested.
-        service.mSendToOwn = false;
-        cPluginManager::CallFirstService(autostart_service_id, &service);
 #ifdef DEBUG
         mLogger.logmsg(LOGLEVEL_ERROR, "\n%s Keylist : ", des.c_str());
         logkeylist(vl);
