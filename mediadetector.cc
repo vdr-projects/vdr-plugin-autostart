@@ -1,10 +1,13 @@
 /*
- * mediadetector.cc
+ * mediadetector.cc: Main detector loop and initialization of
+ *                   known media testers.
  *
- *  Created on: 17.10.2010
- *      Author: uli
+ *
+ * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ *
+ * This code is distributed under the terms and conditions of the
+ * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  */
-
 #include <string>
 #include <stdlib.h>
 #include "mediadetector.h"
@@ -22,6 +25,10 @@ cMediaDetector::~cMediaDetector()
     }
 }
 
+// Create a new instance for a tester, initialize this instance with the contens
+// of the config file and register this tester, for example
+// the file detector reads in the suffix list associated with a file detector
+// instance.
 void cMediaDetector::RegisterTester(const cMediaTester *tester,
                                         const cConfigFileParser &config,
                                         const cExtString sectionname)
@@ -34,6 +41,8 @@ void cMediaDetector::RegisterTester(const cMediaTester *tester,
     mRegisteredMediaTesters.push_back(t);
 }
 
+// Search the corresponding tester for the given TYPE keyword in the
+// config file and register an instance of this detector.
 bool cMediaDetector::AddDetector (const cExtString section)
 {
     bool found = false;
@@ -60,6 +69,7 @@ bool cMediaDetector::AddDetector (const cExtString section)
     return found;
 }
 
+// Read global options for the plugin
 bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
 {
     cExtStringVector vals;
@@ -79,6 +89,8 @@ bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
     return true;
 }
 
+// Initialize the detector and create a first instance of each known
+// media tester.
 bool cMediaDetector::InitDetector(cLogger *logger,
                                       const cExtString initfile)
 {
@@ -116,6 +128,7 @@ bool cMediaDetector::InitDetector(cLogger *logger,
     return true;
 }
 
+// Helper function to check if a device is in the exclude filter
 bool cMediaDetector::InDeviceFilter(const string dev)
 {
     FilterMap::iterator it;
@@ -126,6 +139,21 @@ bool cMediaDetector::InDeviceFilter(const string dev)
         }
     }
     return false;
+}
+
+// Handle when a device is removed
+void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
+{
+    MediaTesterVector::iterator it;
+    // Cleanup device caches for each detector
+    for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
+        cMediaTester *t = *it;
+        try {
+            t->removeDevice(mediainfo);
+        } catch (cDeviceKitException &e) {
+            mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
+        }
+    }
 }
 
 bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
@@ -182,21 +210,8 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
     return found;
 }
 
-void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
-{
-    MediaTesterVector::iterator it;
-    // Cleanup device caches for each detector
-    for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
-        cMediaTester *t = *it;
-        try {
-            t->removeDevice(mediainfo);
-        } catch (cDeviceKitException &e) {
-            mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
-        }
-    }
-}
-
-cExtStringVector cMediaDetector::Detect(string &description, cMediaHandle &mediainfo)
+cExtStringVector cMediaDetector::Detect(string &description,
+                                           cMediaHandle &mediainfo)
 {
     string path;
     cMediaHandle descr(mLogger);
@@ -204,7 +219,9 @@ cExtStringVector cMediaDetector::Detect(string &description, cMediaHandle &media
     cDbusDevkit::DEVICE_SIGNAL signal;
     running = true;
     while (running) {
+        // Wait until device kit detects a media change
         if (mDevkit.WaitDevkit(1000, path, signal)) {
+            // A removed device needs special handling
             if (signal == cDbusDevkit::DeviceRemoved) {
                 DoDeviceRemoved (mediainfo);
             } else {
@@ -247,6 +264,8 @@ cExtStringVector cMediaDetector::Detect(string &description, cMediaHandle &media
 #ifdef DEBUG
                     mLogger->logmsg(LOGLEVEL_INFO, "  ******** Detect ********");
 #endif
+                    // Detect media and return keylist if detection was
+                    // successful
                     if (DoDetect(descr, description, keylist)) {
                         mediainfo = descr;
                         return (keylist);

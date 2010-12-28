@@ -1,5 +1,5 @@
 /*
- * autostart.c: A plugin for the Video Disk Recorder
+ * autostart.cc: A plugin for the Video Disk Recorder
  *
  * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *

@@ -1,8 +1,12 @@
 /*
- * DbusDevkit.h
+ * dbusdevkit.h: Accesses devicekit disks or udisksvia the dbus
+ *               interface
  *
- *  Created on: 24.09.2010
- *      Author: uli
+ *
+ * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ *
+ * This code is distributed under the terms and conditions of the
+ * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  */
 
 #ifndef DBUSDEVKIT_H_
@@ -16,8 +20,6 @@
 #include "logger.h"
 
 #define DEVKITEXCEPTION(t) throw cDeviceKitException(__FILE__, __LINE__,(t))
-
-typedef std::vector<std::string> StringArray;
 
 class cDeviceKitException : private std::exception
 {
@@ -36,47 +38,8 @@ public:
 };
 
 class cDbusDevkit {
-  private:
-    DBusConnection *mConnSystem;
-    DBusError mErr;
-    cLogger *mLogger;
-
-    static const char *DEVICEKIT_DISKS_SERVICE;
-    static const char *UDISKS_SERVICE;
-    static const char *DBUS_NAME;
-
-    const char *mService;
-    std::string mDevicekitInterface;
-
-    DBusMessage *CallDbusProperty (const std::string &path,
-                                     const std::string &name,
-                                     DBusMessageIter *iter)
-                                     throw (cDeviceKitException);
-     // Property s
-    std::string GetDbusPropertyS (const std::string &path,
-                                    const std::string &name)
-                                    throw (cDeviceKitException);
-    // Property as (String Array)
-    StringArray GetDbusPropertyAS (const std::string &path,
-                                     const std::string &name)
-                                     throw (cDeviceKitException);
-    // Property u
-    dbus_int32_t GetDbusPropertyU (const std::string &path,
-                                     const std::string &name)
-                                     throw (cDeviceKitException);
-    // Property b
-    bool GetDbusPropertyB (const std::string &path,
-                              const std::string &name)
-                              throw (cDeviceKitException);
-    bool WaitConn (void) throw (cDeviceKitException);
-
-
-    // Call an interface method which does not return a value
-    void CallInterfaceV(const std::string &path,
-                           const std::string &name)
-                           throw (cDeviceKitException);
-
-  public:
+public:
+    typedef std::vector<std::string> StringArray;
     typedef enum {
         DeviceAdded,
         DeviceRemoved,
@@ -140,6 +103,47 @@ class cDbusDevkit {
         const std::string name = "device-is-media-available";
         return GetDbusPropertyB (path, name);
     }
+  private:
+    DBusConnection *mConnSystem;
+    DBusError mErr;
+    cLogger *mLogger;
+
+    static const char *DEVICEKIT_DISKS_SERVICE;
+    static const char *UDISKS_SERVICE;
+    static const char *DBUS_NAME;
+
+    const char *mService;
+    std::string mDevicekitInterface;
+
+    DBusMessage *CallDbusProperty (const std::string &path,
+                                     const std::string &name,
+                                     DBusMessageIter *iter)
+                                     throw (cDeviceKitException);
+     // Property s
+    std::string GetDbusPropertyS (const std::string &path,
+                                    const std::string &name)
+                                    throw (cDeviceKitException);
+    // Property as (String Array)
+    StringArray GetDbusPropertyAS (const std::string &path,
+                                     const std::string &name)
+                                     throw (cDeviceKitException);
+    // Property u
+    dbus_int32_t GetDbusPropertyU (const std::string &path,
+                                     const std::string &name)
+                                     throw (cDeviceKitException);
+    // Property b
+    bool GetDbusPropertyB (const std::string &path,
+                              const std::string &name)
+                              throw (cDeviceKitException);
+    bool WaitConn (void) throw (cDeviceKitException);
+
+
+    // Call an interface method which does not return a value
+    void CallInterfaceV(const std::string &path,
+                           const std::string &name)
+                           throw (cDeviceKitException);
+
+
 };
 
 #endif /* DBUSDEVKIT_H_ */

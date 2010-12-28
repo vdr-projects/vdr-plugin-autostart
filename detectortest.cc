@@ -1,7 +1,7 @@
 /*
  * detectortest.c: Testprogramm for the media detection framework.
  *
- * To compile the testprogramm use "make detectortest"
+ * To compile the testprogramm use "make test"
  *
  * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *

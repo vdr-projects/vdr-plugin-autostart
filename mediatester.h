@@ -28,6 +28,8 @@ static const MEDIA_MASK_T MEDIA_FS_UNKNOWN = 0x80;
 static const MEDIA_MASK_T MEDIA_AVAILABLE  = 0x100;
 static const MEDIA_MASK_T MEDIA_FS_VFAT    = 0x200;
 
+// This class holds information about the changed media including a
+// reference to the dbus - devkit
 class cMediaHandle
 {
 private:
@@ -54,6 +56,7 @@ public:
     void Umount(void);
     bool isAutoMounted (void) {return (!mMountPath.empty());}
 };
+
 
 class cMediaTester
 {

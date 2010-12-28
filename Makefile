@@ -71,7 +71,7 @@ DEFINES += -DDEBUG
 
 ### The object files (add further files here):
 
-MEDIADETECTOR = cdiotester.o configfileparser.o dbusdevkit.o extstring.o \
+MEDIADETECTOR = cdiotester.o configfileparser.o dbusdevkit.o \
 				filedetector.o mediadetector.o mediatester.o videodvdtester.o
 PLUGINOBJS = $(PLUGIN).o mediadetectorthread.o
 TESTOBJS = detectortest.o $(MEDIADETECTOR)
@@ -132,7 +132,7 @@ i18n: $(I18Nmsgs) $(I18Npot)
 
 ### Targets:
 
-detectortest: $(TESTOBJS)
+test: $(TESTOBJS)
 	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) -o detectortest
 	
 libvdr-$(PLUGIN).so: $(OBJS)

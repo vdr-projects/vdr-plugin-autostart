@@ -2,9 +2,9 @@ This is a "plugin" for the Video Disk Recorder (VDR).
 
 Written by:                  Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
 
-Project's homepage:          URL
+Project's homepage:          http://www.uli-eckhardt.de/vdr/autostart.de.html
 
-Latest version available at: URL
+Latest version available at: http://www.uli-eckhardt.de/vdr/autostart.de.html
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,3 +13,70 @@ the Free Software Foundation; either version 2 of the License, or
 See the file COPYING for more information.
 
 Description:
+
+This PlugIn tries to identify the type of media inserted by removable devices 
+like CD-ROM/DVD or USB sticks and starts the configured PlugIn and execute
+configured key codes, so that a PlugIn can start without any user interaction. 
+
+The configuration of the PlugIn is done in the file
+$VDRCONFIG/conf/plugins/autostart/autostart.conf. A sample autostart.conf looks
+like (see also in the contrib directory):
+
+-------------------------------------------------------------------------------
+; The global section contains definitions global to all detectors
+[GLOBAL]
+; exclude the given devices from media detection, e.g. the root hard drives
+filterdev = sda sdb hda hdb
+[DVD]
+type = dvd   ; DVD Media tester
+keys = @externalplayer OK
+[CD]
+type = cd           ; CD Media tester
+keys = @cdplayer    ; Start CD-Player plugin
+[MP3]
+type = file             ; File Media tester
+files = mp3             ; Suffix to match 
+keys = @music YELLOW    ; If a file ending with .mp3 is found, start music plugin
+linkpath = /video/mount/mp3
+[IMG]
+type = file             ; File Media tester
+files = jpg gif bmp     ; If a file ends with .jpg .gif or .bmp, start image plugin
+keys = @image YELLOW DOWN RED RED
+linkpath = /video/mount/image
+-------------------------------------------------------------------------------
+
+Keywords common to all media testers:
+
+TYPE defines an instance of a media tester. Currently the following media 
+testers are available: 
+
+* DVD   : Recognizes video DVDs via libdvdread.
+* CD    : Detects audio CDs via libcdio.
+* FILE  : Mounts a removable media and try to detect file types according the
+          suffix.
+          
+KEY defines the PlugIn and key codes, which shall be executed when a media
+type is detected. The @ indicates a PlugIn name. So the 
+"keys = @externalplayer OK" line means, start PlugIn externalplayer and press
+the OK key.
+
+Keywords for the FILE-media tester:
+
+FILES:     Suffix for which this tester shall test.
+LINKPATH:  Create a symbolic link from the automatic mounted directory to a 
+           fixed location. For example in the section [MP3] for an inserted 
+           USB-Stick, which contains files with the suffix mp3, mounted to
+           /media/USB-Stick "linkpath = /video/mount/mp3" will create a link
+           from /media/USB-Stick to /video/mount/mp3
+          
+For the above example, which starts the music PlugIn for mp3 files, the 
+corresponding musicsources.conf should look like:
+
+/video/mount/mp3;USB-Stick;0;*.mp3/*.ogg/*.wav/*.MP3/*.OGG/*.WAV/*.m3u/*.M3U/*.pls/*.PLS
+/video/mp3;MP3;0;*.mp3/*.ogg/*.wav/*.MP3/*.OGG/*.WAV/*.m3u/*.M3U/*.pls/*.PLS
+
+And the imagesources.conf for the image PlugIn:
+
+/video/images; Bilder;0; *.jpg *.jpeg *.png *.tif* *.bmp
+/video/mount/image; USB; 0; *.jpg *.jpeg *.png *.tif* *.bmp
+

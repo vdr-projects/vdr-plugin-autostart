@@ -1,6 +1,6 @@
 /*
  * mediatdetecor.h: Main media detection class which initialize all media
- *                  detectors, waits for a media change and try to detect
+ *                  testers, waits for a media change and try to detect
  *                  the inserted media.
  *
  * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>

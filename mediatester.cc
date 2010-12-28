@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// Read media information from devkit/udisk
 bool cMediaHandle::GetDescription (cDbusDevkit &d,
                                        const string &path)
 {
@@ -54,11 +55,14 @@ bool cMediaHandle::GetDescription (cDbusDevkit &d,
     return (success);
 }
 
+// Try to auto mount the media
 bool cMediaHandle::AutoMount(void)
 {
     int i;
 
     mMountPath.clear();
+    // We will try several times since other tasks, for example
+    // other window managers may also try to automount.
     for(i = 0; i < 3; i++)
     {
         try {
@@ -104,8 +108,10 @@ cExtStringVector cMediaTester::getList (cConfigFileParser config,
 bool cMediaTester::loadConfig (cConfigFileParser config,
                                    const cExtString sectionname)
 {
+    // Each media tester must read in at least the KEYS keyword.
     mKeylist = getList (config, sectionname, "KEYS");
     if (mKeylist.empty() ) {
+        mLogger->logmsg(LOGLEVEL_ERROR, "No KEYS defined\n");
         return false;
     }
     return true;

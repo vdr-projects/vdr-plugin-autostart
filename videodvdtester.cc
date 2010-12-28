@@ -1,4 +1,12 @@
-
+/*
+ * videodvdtester.cc: Detects Video DVDs, using libdvdread.
+ *
+ *
+ * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ *
+ * This code is distributed under the terms and conditions of the
+ * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
+ */
 #include "videodvdtester.h"
 #include <dvdread/dvd_reader.h>
 

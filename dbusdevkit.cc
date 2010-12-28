@@ -1,9 +1,14 @@
 /*
- * dbus.cc
+ * dbusdevkit.cc: Accesses devicekit disks or udisksvia the dbus
+ *                interface
  *
- *  Created on: 24.09.2010
- *      Author: uli
+ *
+ * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ *
+ * This code is distributed under the terms and conditions of the
+ * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "dbusdevkit.h"
@@ -219,7 +224,7 @@ string cDbusDevkit::GetDbusPropertyS (const string &path,
     return retval;
 }
 
-StringArray cDbusDevkit::GetDbusPropertyAS (const string &path,
+cDbusDevkit::StringArray cDbusDevkit::GetDbusPropertyAS (const string &path,
                                                 const string &name)
                                                 throw (cDeviceKitException)
 {
