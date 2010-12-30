@@ -15,16 +15,7 @@ PLUGIN = autostart
 
 VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).h | awk '{ print $$6 }' | sed -e 's/[";]//g')
 
-### The C++ compiler and options:
-
-CXX      ?= g++
-CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
-
-### The directory environment:
-
-VDRDIR = ../../..
-LIBDIR = ../../lib
-TMPDIR = /tmp
+include Makefile.inc
 
 ### Make sure that necessary options are included:
 
@@ -71,11 +62,9 @@ DEFINES += -DDEBUG
 
 ### The object files (add further files here):
 
-MEDIADETECTOR = cdiotester.o configfileparser.o dbusdevkit.o \
-				filedetector.o mediadetector.o mediatester.o videodvdtester.o
 PLUGINOBJS = $(PLUGIN).o mediadetectorthread.o
-TESTOBJS = detectortest.o $(MEDIADETECTOR)
-OBJS =  $(PLUGINOBJS) $(MEDIADETECTOR) 
+TESTOBJS = detectortest.o
+OBJS =  $(PLUGINOBJS) 
 
 # Options for dbus
 LIBS = $(shell pkg-config --libs dbus-1)
@@ -132,11 +121,14 @@ i18n: $(I18Nmsgs) $(I18Npot)
 
 ### Targets:
 
-test: $(TESTOBJS)
-	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) -o detectortest
+detector.a: force_look
+	@cd detector; $(MAKE)
 	
-libvdr-$(PLUGIN).so: $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) -o $@
+test: $(TESTOBJS) detector.a
+	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS)  detector.a -o detectortest
+	
+libvdr-$(PLUGIN).so: $(OBJS) detector.a
+	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS)detector.a  -o $@
 	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 
 dist: clean
@@ -149,3 +141,8 @@ dist: clean
 
 clean:
 	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot detectortest
+	@cd detector; $(MAKE) clean
+	
+force_look :
+	true
+	

@@ -15,6 +15,7 @@
 
 #include "mediadetectorthread.h"
 #include "autostartservice.h"
+#include "configmenu.h"
 
 static const char *VERSION        = "0.0.1";
 static const char *DESCRIPTION    = trNOOP("Start a plugin automatically");

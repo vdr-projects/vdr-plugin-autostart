@@ -14,10 +14,10 @@
 #include <string>
 #include <vdr/thread.h>
 #include "mediadetector.h"
+#include "vdrlogger.h"
 
 class cMediaDetectorThread : public cThread {
 private:
-    // cLogger mLogger; // Log to stdout
     cVdrLogger mLogger; // Use VDR Logging
     cMediaDetector mDetector;
     std::string mPluginName;

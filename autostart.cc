@@ -15,7 +15,7 @@
 
 using namespace std;
 
-static const char *MAINMENUENTRY  = trNOOP("Autostart");
+static const char *MAINMENUENTRY  = tr("Autostart");
 
 string cPluginAutostart::mCfgDir = "autostart";
 string cPluginAutostart::mCfgFile = "autostart.conf";
@@ -87,6 +87,14 @@ cString cPluginAutostart::Active(void)
   return NULL;
 }
 
+const char *cPluginAutostart::MainMenuEntry(void)
+{
+    if (cConfigMenu::GetShowMainMenu()) {
+        return tr(MAINMENUENTRY);
+    }
+    return NULL;
+}
+
 cOsdObject *cPluginAutostart::MainMenuAction(void)
 {
   // Perform the action when selected from the main VDR menu.
@@ -95,14 +103,14 @@ cOsdObject *cPluginAutostart::MainMenuAction(void)
 
 cMenuSetupPage *cPluginAutostart::SetupMenu(void)
 {
-  // Return a setup menu in case the plugin supports one.
-  return NULL;
+  // Return the setup menu
+  return new cConfigMenu();
 }
 
 bool cPluginAutostart::SetupParse(const char *Name, const char *Value)
 {
-  // Parse your own setup parameters and store their values.
-  return false;
+  // Parse setup parameters and store their values.
+  return cConfigMenu::SetupParse(Name, Value);
 }
 
 bool cPluginAutostart::Service(const char *Id, void *Data)
@@ -171,11 +179,6 @@ cString cPluginAutostart::SVDRPCommand(const char *Command, const char *Option, 
 {
   // Process SVDRP commands this plugin implements
   return NULL;
-}
-
-const char *cPluginAutostart::MainMenuEntry(void)
-{
-    return tr(MAINMENUENTRY);
 }
 
 VDRPLUGINCREATOR(cPluginAutostart); // Don't touch this!
