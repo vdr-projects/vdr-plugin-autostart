@@ -1,6 +1,6 @@
 /*
  * logger.h: Logging for the media detection framework which can be used
- *           standalone or use the vdr logging mechanism.
+ *           standalone.
  *
  *
  * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>

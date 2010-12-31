@@ -12,23 +12,22 @@
 
 #include "configmenu.h"
 
-static const char *WORKINGMODE = "Mode";
-static const char *ENABLEMAINMENU = "EnableMainMenu";
-
 static const char *workingmode_entry[] = {
         tr("Automatic"),
         tr("Manual"),
 };
 
+const char *cConfigMenu::WORKINGMODE = "Mode";
+const char *cConfigMenu::ENABLEMAINMENU = "EnableMainMenu";
 int cConfigMenu::mShowMainMenu = true;
-int cConfigMenu::mWorkingMode = cConfigMenu::AUTO_START;
+int cConfigMenu::mWorkingMode = cMediaDetector::AUTO_START;
 
 cConfigMenu::cConfigMenu(void) : cMenuSetupPage()
 {
     SetSection (tr("Autostart"));
 
     Add(new cMenuEditStraItem(tr("Mode"), &mWorkingMode,
-                               (int)cConfigMenu::LAST_MODE, workingmode_entry));
+                               (int)cMediaDetector::LAST_MODE, workingmode_entry));
     Add(new cMenuEditBoolItem(tr("Show in main menu"), &mShowMainMenu));
 }
 

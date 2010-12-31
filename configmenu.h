@@ -14,22 +14,20 @@
 #define CONFIGMENU_H_
 
 #include <vdr/plugin.h>
+#include "detector/mediadetector.h"
 #include "autostart.h"
 
 class cConfigMenu: public cMenuSetupPage {
 public:
-    typedef enum {
-        AUTO_START,
-        MANUAL_START,
-        LAST_MODE
-    } WORKING_MODE;
     cConfigMenu(void);
-    static const WORKING_MODE GetWorkingMode(void) {
-        return (WORKING_MODE)mWorkingMode;
+    static const cMediaDetector::WORKING_MODE GetWorkingMode(void) {
+        return (cMediaDetector::WORKING_MODE)mWorkingMode;
     }
     static const bool GetShowMainMenu(void) { return mShowMainMenu; }
     static const bool SetupParse(const char *Name, const char *Value);
 
+    static const char *WORKINGMODE;
+    static const char *ENABLEMAINMENU;
 private:
     static int mWorkingMode;
     static int mShowMainMenu;

@@ -14,11 +14,11 @@
 #include <vdr/plugin.h>
 
 #include "mediadetectorthread.h"
-#include "autostartservice.h"
 #include "configmenu.h"
+#include "autostartservice.h"
 
 static const char *VERSION        = "0.0.1";
-static const char *DESCRIPTION    = trNOOP("Start a plugin automatically");
+static const char *DESCRIPTION    = tr("Start a plugin automatically");
 
 class cSenderThread : public cThread {
 private:

@@ -83,9 +83,18 @@ bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
         for (it = vals.begin(); it != vals.end(); it++) {
             cExtString dev = *it;
             mLogger->logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
-            mFilterDev.insert(dev);
+            mFilterDevices.insert(dev);
         }
     }
+    if (mConfigFileParser.GetValues(sectionname, "SCANDEV", vals)) {
+        cExtStringVector::iterator it;
+        for (it = vals.begin(); it != vals.end(); it++) {
+            cExtString dev = *it;
+            mLogger->logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
+            mScanDevices.insert(dev);
+        }
+    }
+
     return true;
 }
 
@@ -131,8 +140,8 @@ bool cMediaDetector::InitDetector(cLogger *logger,
 // Helper function to check if a device is in the exclude filter
 bool cMediaDetector::InDeviceFilter(const string dev)
 {
-    FilterMap::iterator it;
-    for (it = mFilterDev.begin(); it != mFilterDev.end(); it++) {
+    StringSet::iterator it;
+    for (it = mFilterDevices.begin(); it != mFilterDevices.end(); it++) {
         string s = *it;
         if (dev.find(s) != string::npos) {
             return true;
@@ -154,6 +163,27 @@ void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
             mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
         }
     }
+    mKnownDevices.erase(mediainfo.GetDeviceFile());
+}
+
+bool cMediaDetector::DoManualScan(cMediaHandle &mediainfo,
+                                  string &description,  cExtStringVector &vl)
+{
+    StringSet::iterator it;
+    for (it = mKnownDevices.begin(); it != mKnownDevices.end(); it++) {
+        string path = *it;
+        mLogger->logmsg(LOGLEVEL_INFO, "Manual Scan %s", path.c_str());
+        try {
+            mediainfo.GetDescription(mDevkit, path);
+            if (DoDetect (mediainfo, description, vl)) {
+                return true;
+            }
+        } catch (cDeviceKitException &e) {
+            mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
+        }
+    }
+
+    return false;
 }
 
 bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
@@ -162,7 +192,15 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
     cExtStringVector keylist;
     bool found = false;
     MediaTesterVector::iterator it;
-
+    string dev = mediainfo.GetDeviceFile();
+    if (!mManualScan) {
+        if (mScanDevices.find(dev) == mScanDevices.end()) {
+            mKnownDevices.insert(dev);
+        }
+        if (mWorkingMode == MANUAL_START) {
+            return (false);
+        }
+    }
     // Initialize scan for each detector, e.g. the file detector will
     // build its cache.
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
@@ -217,8 +255,9 @@ cExtStringVector cMediaDetector::Detect(string &description,
     cMediaHandle descr(mLogger);
     cExtStringVector keylist;
     cDbusDevkit::DEVICE_SIGNAL signal;
-    running = true;
-    while (running) {
+    mRunning = true;
+    mManualScan = false;
+    while (mRunning) {
         // Wait until device kit detects a media change
         if (mDevkit.WaitDevkit(1000, path, signal)) {
             // A removed device needs special handling
@@ -271,6 +310,15 @@ cExtStringVector cMediaDetector::Detect(string &description,
                         return (keylist);
                     }
                 }
+            }
+        }
+        else { // Start manual scan
+            if (mManualScan) {
+                if (DoManualScan(descr, description, keylist)) {
+                    mediainfo = descr;
+                    return (keylist);
+                }
+                mManualScan = false;
             }
         }
     }

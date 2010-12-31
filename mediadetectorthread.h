@@ -13,7 +13,7 @@
 
 #include <string>
 #include <vdr/thread.h>
-#include "mediadetector.h"
+#include "detector/mediadetector.h"
 #include "vdrlogger.h"
 
 class cMediaDetectorThread : public cThread {
@@ -36,6 +36,10 @@ public:
         mDetector.Stop();
         Cancel(5);
     }
+    void SetWorkingMode (cMediaDetector::WORKING_MODE mode) {
+        mDetector.SetWorkingMode(mode);
+    }
+    void StartManualScan (void) { mDetector.StartManualScan(); }
 };
 
 #endif /* MEDIADETECTORTHREAD_H_ */

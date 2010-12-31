@@ -12,9 +12,9 @@
 #define AUTOSTARTSERVICE_H_
 
 #include <string>
-#include "mediadetector.h"
+#include "detector/mediadetector.h"
 
-static const char *autostart_service_id = "AutostartPlugin-V0.0.1";
+static const char *AUTOSTART_SERVICE_ID = "AutostartPlugin-V0.0.1";
 
 typedef struct _autostart_service {
     std::string mDescription;

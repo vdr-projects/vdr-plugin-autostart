@@ -97,7 +97,7 @@ const char *cPluginAutostart::MainMenuEntry(void)
 
 cOsdObject *cPluginAutostart::MainMenuAction(void)
 {
-  // Perform the action when selected from the main VDR menu.
+  mDetector.StartManualScan();
   return NULL;
 }
 
@@ -110,7 +110,11 @@ cMenuSetupPage *cPluginAutostart::SetupMenu(void)
 bool cPluginAutostart::SetupParse(const char *Name, const char *Value)
 {
   // Parse setup parameters and store their values.
-  return cConfigMenu::SetupParse(Name, Value);
+  bool ret = cConfigMenu::SetupParse(Name, Value);
+  if (Name == cConfigMenu::ENABLEMAINMENU) {
+      mDetector.SetWorkingMode(cConfigMenu::GetWorkingMode());
+  }
+  return ret;
 }
 
 bool cPluginAutostart::Service(const char *Id, void *Data)
@@ -120,8 +124,8 @@ bool cPluginAutostart::Service(const char *Id, void *Data)
     }
     dsyslog("Service %s received\n", Id);
     cMutexLock MutexLock(&mAutostartMutex);
-    if (strcmp(Id, autostart_service_id) == 0) {
-        AutoStartService *se = (AutoStartService *) Data;
+    if (strcmp(Id, AUTOSTART_SERVICE_ID) == 0) {
+        AutoStartService *se = (AutoStartService *)Data;
         if (se->mSendToOwn) {
             dsyslog("Descr %s", se->mDescription.c_str());
             mSender.Run(*se);

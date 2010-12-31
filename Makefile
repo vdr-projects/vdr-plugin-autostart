@@ -15,6 +15,8 @@ PLUGIN = autostart
 
 VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).h | awk '{ print $$6 }' | sed -e 's/[";]//g')
 
+### Include defaults for the plugin
+
 include Makefile.inc
 
 ### Make sure that necessary options are included:
@@ -62,9 +64,7 @@ DEFINES += -DDEBUG
 
 ### The object files (add further files here):
 
-PLUGINOBJS = $(PLUGIN).o mediadetectorthread.o
-TESTOBJS = detectortest.o
-OBJS =  $(PLUGINOBJS) 
+OBJS = $(PLUGIN).o mediadetectorthread.o configmenu.o
 
 # Options for dbus
 LIBS = $(shell pkg-config --libs dbus-1)
@@ -90,7 +90,7 @@ all: libvdr-$(PLUGIN).so i18n
 MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
-	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) > $@
+	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) > $@
 
 -include $(DEPFILE)
 
@@ -124,11 +124,9 @@ i18n: $(I18Nmsgs) $(I18Npot)
 detector.a: force_look
 	@cd detector; $(MAKE)
 	
-test: $(TESTOBJS) detector.a
-	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS)  detector.a -o detectortest
-	
+
 libvdr-$(PLUGIN).so: $(OBJS) detector.a
-	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS)detector.a  -o $@
+	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) detector.a  -o $@
 	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 
 dist: clean
@@ -140,7 +138,7 @@ dist: clean
 	@echo Distribution package created as $(PACKAGE).tgz
 
 clean:
-	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot detectortest
+	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot 
 	@cd detector; $(MAKE) clean
 	
 force_look :

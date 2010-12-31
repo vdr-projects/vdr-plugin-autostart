@@ -50,11 +50,11 @@ void cMediaDetectorThread::Action(void)
 
             }
             service.mSendToOwn = true;
-            p->Service(autostart_service_id, &service);
+            p->Service(AUTOSTART_SERVICE_ID, &service);
 
             // Send to all plugins in case an other plugin is interested.
             service.mSendToOwn = false;
-            cPluginManager::CallFirstService(autostart_service_id, &service);
+            cPluginManager::CallFirstService(AUTOSTART_SERVICE_ID, &service);
         }
 #ifdef DEBUG
         mLogger.logmsg(LOGLEVEL_ERROR, "\n%s Keylist : ", des.c_str());

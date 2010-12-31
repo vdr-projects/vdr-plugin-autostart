@@ -10,7 +10,7 @@ VDRDIR = ../../..
 LIBDIR = ../../lib
 TMPDIR = /tmp
 
-INCLUDES += -I$(VDRDIR)/include -Idetector
+INCLUDES += -I$(VDRDIR)/include
 
 DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # Uncomment to enable additional debug output
