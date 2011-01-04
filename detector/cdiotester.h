@@ -12,7 +12,7 @@
 #define CDIOTESTER_H_
 
 #include "mediatester.h"
-#include "extstring.h"
+#include "stringtools.h"
 
 class cCdioTester : public cMediaTester
 {
@@ -22,7 +22,7 @@ public:
         mDescription = descr;
         mExt = ext;
     }
-    bool isMedia (cMediaHandle d, cExtStringVector &keylist);
+    bool isMedia (cMediaHandle d, stringVector &keylist);
     cMediaTester *create(cLogger *l) const {
         return new cCdioTester(l, mDescription, mExt);
     }

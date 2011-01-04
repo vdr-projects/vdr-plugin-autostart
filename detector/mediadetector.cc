@@ -11,6 +11,7 @@
 #include <string>
 #include <stdlib.h>
 #include "mediadetector.h"
+#include <assert.h>
 
 using namespace std;
 
@@ -31,7 +32,7 @@ cMediaDetector::~cMediaDetector()
 // instance.
 void cMediaDetector::RegisterTester(const cMediaTester *tester,
                                         const cConfigFileParser &config,
-                                        const cExtString sectionname)
+                                        const string sectionname)
 {
     cMediaTester *t = tester->create(mLogger);
     if (!t->loadConfig (mConfigFileParser, sectionname)) {
@@ -43,12 +44,12 @@ void cMediaDetector::RegisterTester(const cMediaTester *tester,
 
 // Search the corresponding tester for the given TYPE keyword in the
 // config file and register an instance of this detector.
-bool cMediaDetector::AddDetector (const cExtString section)
+bool cMediaDetector::AddDetector (const string section)
 {
     bool found = false;
-    cExtStringVector vals;
+    stringVector vals;
     mLogger->logmsg(LOGLEVEL_INFO, "Section %s", section.c_str());
-    cExtString type;
+    string type;
     if (!mConfigFileParser.GetSingleValue(section, "TYPE", type)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No type specified for section %s", section.c_str());
         return false;
@@ -70,28 +71,40 @@ bool cMediaDetector::AddDetector (const cExtString section)
 }
 
 // Read global options for the plugin
-bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
+bool cMediaDetector::AddGlobalOptions (const string sectionname)
 {
-    cExtStringVector vals;
+    stringVector vals;
+    stringVector::iterator it;
+    string dev;
 
     if (sectionname != "GLOBAL") {
         return false;
     }
 
     if (mConfigFileParser.GetValues(sectionname, "FILTERDEV", vals)) {
-        cExtStringVector::iterator it;
         for (it = vals.begin(); it != vals.end(); it++) {
-            cExtString dev = *it;
+            dev = *it;
             mLogger->logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
             mFilterDevices.insert(dev);
         }
     }
     if (mConfigFileParser.GetValues(sectionname, "SCANDEV", vals)) {
-        cExtStringVector::iterator it;
         for (it = vals.begin(); it != vals.end(); it++) {
-            cExtString dev = *it;
-            mLogger->logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
+            dev = *it;
+            if (dev[0] != '/') {
+                dev = "/dev/" + dev;
+            }
+            mLogger->logmsg(LOGLEVEL_INFO, "Scan dev %s", dev.c_str());
             mScanDevices.insert(dev);
+
+#ifdef DEBUG
+            try {
+                mLogger->logmsg(LOGLEVEL_INFO, "Path : %s",
+                        mDevkit.FindDeviceByDeviceFile(dev).c_str());
+            } catch (cDeviceKitException &e) {
+                mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
+            }
+#endif
         }
     }
 
@@ -101,13 +114,15 @@ bool cMediaDetector::AddGlobalOptions (const cExtString sectionname)
 // Initialize the detector and create a first instance of each known
 // media tester.
 bool cMediaDetector::InitDetector(cLogger *logger,
-                                      const cExtString initfile)
+                                      const string initfile)
 {
     Section::iterator iter;
-    cExtString sectionname;
+    string sectionname;
 
     mLogger = logger;
     // Initialize known media testers
+
+    mMediaTesters.clear();
     mMediaTesters.push_back(new cCdioTester(logger, "Audio CD", "CD"));
     mMediaTesters.push_back(new cVideoDVDTester(logger, "Video DVD", "DVD"));
     mMediaTesters.push_back(new cFileDetector(logger, "Files", "FILE"));
@@ -140,7 +155,7 @@ bool cMediaDetector::InitDetector(cLogger *logger,
 // Helper function to check if a device is in the exclude filter
 bool cMediaDetector::InDeviceFilter(const string dev)
 {
-    StringSet::iterator it;
+    stringSet::iterator it;
     for (it = mFilterDevices.begin(); it != mFilterDevices.end(); it++) {
         string s = *it;
         if (dev.find(s) != string::npos) {
@@ -167,10 +182,22 @@ void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
 }
 
 bool cMediaDetector::DoManualScan(cMediaHandle &mediainfo,
-                                  string &description,  cExtStringVector &vl)
+                                  string &description,  stringVector &vl)
 {
-    StringSet::iterator it;
+    stringSet::iterator it;
     for (it = mKnownDevices.begin(); it != mKnownDevices.end(); it++) {
+        string path = *it;
+        mLogger->logmsg(LOGLEVEL_INFO, "Manual Scan %s", path.c_str());
+        try {
+            mediainfo.GetDescription(mDevkit, path);
+            if (DoDetect (mediainfo, description, vl)) {
+                return true;
+            }
+        } catch (cDeviceKitException &e) {
+            mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
+        }
+    }
+    for (it = mScanDevices.begin(); it != mScanDevices.end(); it++) {
         string path = *it;
         mLogger->logmsg(LOGLEVEL_INFO, "Manual Scan %s", path.c_str());
         try {
@@ -187,9 +214,9 @@ bool cMediaDetector::DoManualScan(cMediaHandle &mediainfo,
 }
 
 bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
-                                  string &description,  cExtStringVector &vl)
+                                  string &description,  stringVector &vl)
 {
-    cExtStringVector keylist;
+    stringVector keylist;
     bool found = false;
     MediaTesterVector::iterator it;
     string dev = mediainfo.GetDeviceFile();
@@ -248,12 +275,12 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
     return found;
 }
 
-cExtStringVector cMediaDetector::Detect(string &description,
+stringVector cMediaDetector::Detect(string &description,
                                            cMediaHandle &mediainfo)
 {
     string path;
     cMediaHandle descr(mLogger);
-    cExtStringVector keylist;
+    stringVector keylist;
     cDbusDevkit::DEVICE_SIGNAL signal;
     mRunning = true;
     mManualScan = false;

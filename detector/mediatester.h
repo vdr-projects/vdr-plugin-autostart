@@ -12,7 +12,7 @@
 
 #include "dbusdevkit.h"
 #include "configfileparser.h"
-#include "extstring.h"
+#include "stringtools.h"
 #include "logger.h"
 
 typedef long MEDIA_MASK_T;
@@ -33,11 +33,11 @@ static const MEDIA_MASK_T MEDIA_FS_VFAT    = 0x200;
 class cMediaHandle
 {
 private:
-    cExtString mPath;
-    cExtString mNativePath;
-    cExtString mDeviceFile;
-    cExtString mType;
-    cExtString mMountPath;
+    std::string mPath;
+    std::string mNativePath;
+    std::string mDeviceFile;
+    std::string mType;
+    std::string mMountPath;
     MEDIA_MASK_T mMediaMask;
     cDbusDevkit *mDevKit;
     cLogger *mLogger;
@@ -46,40 +46,39 @@ public:
     cMediaHandle() {mLogger = NULL; mDevKit = NULL;}
     cMediaHandle(cLogger *l) { mLogger = l; mDevKit = NULL; }
     bool GetDescription(cDbusDevkit &d, const std::string &path);
-    cExtString GetNativePath(void) {return mNativePath;}
-    cExtString GetDeviceFile(void) {return mDeviceFile;}
-    cExtString GetType(void) {return mType;}
-    cExtString GetPath(void) {return mPath;}
-    cExtString GetMountPath (void) {return mMountPath;}
+    std::string GetNativePath(void) {return mNativePath;}
+    std::string GetDeviceFile(void) {return mDeviceFile;}
+    std::string GetType(void) {return mType;}
+    std::string GetPath(void) {return mPath;}
+    std::string GetMountPath (void) {return mMountPath;}
     MEDIA_MASK_T GetMediaMask(void) {return mMediaMask;}
     bool AutoMount(void);
     void Umount(void);
     bool isAutoMounted (void) {return (!mMountPath.empty());}
 };
 
-
 class cMediaTester
 {
 protected:
     cLogger *mLogger;
-    cExtStringVector mKeylist;
+    stringVector mKeylist;
     std::string mDescription;
     std::string mExt;
 
 public:
     virtual bool loadConfig (cConfigFileParser config,
-                                const cExtString sectionname);
-    virtual bool isMedia (cMediaHandle d, cExtStringVector &keylist) = 0;
+                                const std::string sectionname);
+    virtual bool isMedia (cMediaHandle d, stringVector &keylist) = 0;
     virtual cMediaTester *create(cLogger *) const = 0;
     virtual void startScan (cMediaHandle &d) {};
     virtual void endScan (cMediaHandle &d) {};
     virtual void removeDevice (cMediaHandle d) {};
-    cExtStringVector getList (cConfigFileParser config,
-                        const cExtString sectionname,
-                        const cExtString key);
-
-    bool typeMatches (const cExtString name) const;
-    std::string GetDescription(void) {return mDescription;}
+    virtual stringVector getList (cConfigFileParser config,
+                                const std::string sectionname,
+                                const std::string key);
+    virtual bool typeMatches (const std::string name);
+    virtual std::string GetDescription(void) {return mDescription;}
+    virtual ~cMediaTester() {};
 };
 
 #endif /* MEDIATESTER_H_ */

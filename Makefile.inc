@@ -2,7 +2,8 @@
 ### The C++ compiler and options:
 
 CXX      ?= g++
-CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
+#CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
+CXXFLAGS ?= -g3 -O0 -Wall -Woverloaded-virtual -Wno-parentheses
 
 ### The directory environment:
 

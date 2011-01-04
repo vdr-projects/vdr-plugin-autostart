@@ -112,6 +112,7 @@ bool cPluginAutostart::SetupParse(const char *Name, const char *Value)
   // Parse setup parameters and store their values.
   bool ret = cConfigMenu::SetupParse(Name, Value);
   if (Name == cConfigMenu::ENABLEMAINMENU) {
+printf("SetupParse Name %s %s\n",Name, Value);
       mDetector.SetWorkingMode(cConfigMenu::GetWorkingMode());
   }
   return ret;
@@ -137,8 +138,8 @@ bool cPluginAutostart::Service(const char *Id, void *Data)
 
 void cSenderThread::Action(void)
 {
-    cExtStringVector vl = as.mKeyList;
-    cExtStringVector::iterator it;
+    stringVector vl = as.mKeyList;
+    stringVector::iterator it;
     cPlugin *p;
 
     for (it = vl.begin(); it != vl.end(); it++) {

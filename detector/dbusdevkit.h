@@ -49,10 +49,10 @@ public:
 
     cDbusDevkit(cLogger *logger);
 
-   // void SetLogger (cLogger *logger) { mLogger = logger; }
-
     bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
 
+    std::string FindDeviceByDeviceFile (const std::string device);
+    // Do automount and return mount path
     std::string AutoMount(const std::string path)
                                 throw (cDeviceKitException);
     void UnMount (const std::string &path)
@@ -111,8 +111,12 @@ public:
     static const char *DEVICEKIT_DISKS_SERVICE;
     static const char *UDISKS_SERVICE;
     static const char *DBUS_NAME;
+    static const char *DEVICEKIT_DISKS_OBJECT;
+    static const char *UDISKS_OBJECT;
 
     const char *mService;
+    const char *mObjectPath;
+
     std::string mDevicekitInterface;
 
     DBusMessage *CallDbusProperty (const std::string &path,

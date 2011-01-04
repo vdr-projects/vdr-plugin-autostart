@@ -21,7 +21,7 @@ public:
         mDescription = descr;
         mExt = ext;
     }
-    bool isMedia(cMediaHandle d, cExtStringVector &keylist);
+    bool isMedia(cMediaHandle d, stringVector &keylist);
     cMediaTester *create(cLogger *l) const {
         return new cVideoDVDTester(l, mDescription, mExt);
     }

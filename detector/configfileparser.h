@@ -20,37 +20,37 @@
 #include <queue>
 #include <algorithm>
 
-#include "extstring.h"
+#include "stringtools.h"
 #include "logger.h"
 
-typedef std::queue<cExtString> cExtStringQueue;
-typedef std::vector<cExtString> cExtStringVector;
-typedef std::map<cExtString, cExtStringVector> Key;
-typedef std::map<cExtString, Key> Section;
+typedef std::queue<std::string> stringQueue;
+typedef std::vector<std::string> stringVector;
+typedef std::map<std::string, stringVector> Key;
+typedef std::map<std::string, Key> Section;
 
 class cConfigFileParser {
 private:
     static std::string mWhiteSpace;
     Section mSections;
-    cExtString mCurrSection;
+    std::string mCurrSection;
     cLogger *mLogger;
 
-    void AddKey (Key &, const cExtString &, const cExtString &);
-    void AddSection (cExtString , cExtString , const cExtString);
-    bool isSection (const cExtString &token, cExtString &section);
-    bool isComment (const cExtString &token) {return (token.at(0) == ';');}
-    bool ParseLine (const cExtString line);
-    cExtStringQueue TokenizeLine (const cExtString line);
+    void AddKey (Key &, const std::string &, const std::string &);
+    void AddSection (std::string , std::string , const std::string);
+    bool isSection (const std::string &token, std::string &section);
+    bool isComment (const std::string &token) {return (token.at(0) == ';');}
+    bool ParseLine (const std::string line);
+    stringQueue TokenizeLine (const std::string line);
 public:
-   // cConfigFileParser() {}
+
     cConfigFileParser(cLogger *l) {mLogger = l;}
-    bool Parse (const cExtString filename);
-    bool GetFirstSection (Section::iterator &iter,cExtString &sectionname);
-    bool GetNextSection (Section::iterator &iter, cExtString &sectionname);
-    bool GetValues (const cExtString sectionname, const cExtString key,
-                      cExtStringVector &values);
-    bool GetSingleValue (const cExtString sectionname, const cExtString key,
-                           cExtString &values);
+    bool Parse (const std::string filename);
+    bool GetFirstSection (Section::iterator &iter, std::string &sectionname);
+    bool GetNextSection (Section::iterator &iter, std::string &sectionname);
+    bool GetValues (const std::string sectionname, const std::string key,
+                      stringVector &values);
+    bool GetSingleValue (const std::string sectionname, const std::string key,
+                           std::string &values);
 };
 
 #endif /* CONFIGFILEPARSER_H_ */

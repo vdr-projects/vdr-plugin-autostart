@@ -22,7 +22,7 @@ private:
     cMediaDetector mDetector;
     std::string mPluginName;
 #ifdef DEBUG
-    void logkeylist(cExtStringVector vl);
+    void logkeylist(stringVector vl);
 #endif
 
 public:
@@ -37,6 +37,7 @@ public:
         Cancel(5);
     }
     void SetWorkingMode (cMediaDetector::WORKING_MODE mode) {
+printf("Set working Mode %d\n", mode);
         mDetector.SetWorkingMode(mode);
     }
     void StartManualScan (void) { mDetector.StartManualScan(); }

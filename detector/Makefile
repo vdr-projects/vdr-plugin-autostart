@@ -20,6 +20,7 @@ clean:
 	@-rm -f $(OBJS)
 	@-rm -f $(OBJLIBS)
 	@-rm -f detectortest
+	@-rm -f core
 
 ### Implicit rules:
 
@@ -34,7 +35,7 @@ $(DEPFILE): Makefile
 	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) > $@
 
 ### Build test programm
-test: $(TESTOBJS) $(OBJLIBS)
+test: $(TESTOBJS) $(OBJLIBS) $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) $(OBJLIBS) -o detectortest
 	
 force_look :

@@ -35,6 +35,7 @@ const bool cConfigMenu::SetupParse(const char *Name, const char *Value)
 {
   // Parse setup parameters and store their values.
   if (strcasecmp(Name, WORKINGMODE) == 0) {
+printf("WorkingMode %s\n",Value);
       mShowMainMenu = atoi(Value);
   }
   else if (strcasecmp(Name, ENABLEMAINMENU) == 0) {
@@ -48,6 +49,7 @@ const bool cConfigMenu::SetupParse(const char *Name, const char *Value)
 
 void cConfigMenu::Store(void)
 {
+printf("Store\n");
     SetupStore(WORKINGMODE, mWorkingMode);
     SetupStore(ENABLEMAINMENU, (int)mShowMainMenu);
 }

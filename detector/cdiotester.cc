@@ -10,7 +10,7 @@
 #include "cdiotester.h"
 #include <cdio/cdda.h>
 
-bool cCdioTester::isMedia (cMediaHandle d, cExtStringVector &keylist)
+bool cCdioTester::isMedia (cMediaHandle d, stringVector &keylist)
 {
     CdIo_t *cdio;
     bool ismedia = TRUE;

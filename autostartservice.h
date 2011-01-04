@@ -14,12 +14,12 @@
 #include <string>
 #include "detector/mediadetector.h"
 
-static const char *AUTOSTART_SERVICE_ID = "AutostartPlugin-V0.0.1";
+#define AUTOSTART_SERVICE_ID "AutostartPlugin-V0.0.1"
 
 typedef struct _autostart_service {
     std::string mDescription;
     std::string mMountPath;
-    cExtStringVector mKeyList;
+    stringVector mKeyList;
     cMediaHandle mMediaDescr;
     bool mSendToOwn;
 } AutoStartService;

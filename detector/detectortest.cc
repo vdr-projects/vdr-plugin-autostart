@@ -19,10 +19,10 @@
 
 using namespace std;
 
-void logkeylist(cExtStringVector vl)
+void logkeylist(stringVector vl)
 {
     cLogger log;
-    cExtStringVector::iterator it;
+    stringVector::iterator it;
     for (it = vl.begin(); it != vl.end(); it++) {
         log.logmsg(LOGLEVEL_ERROR, "   %s", it->c_str());
     }
@@ -31,7 +31,7 @@ int main()
 {
     cLogger log;
     cMediaDetector detector(&log);
-    cExtStringVector vl;
+    stringVector vl;
     string descr;
     cMediaHandle ha;
 

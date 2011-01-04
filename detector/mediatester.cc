@@ -87,18 +87,18 @@ void cMediaHandle::Umount(void)
     mMountPath.clear();
 }
 
-cExtStringVector cMediaTester::getList (cConfigFileParser config,
-                                    const cExtString sectionname,
-                                    const cExtString key)
+stringVector cMediaTester::getList (cConfigFileParser config,
+                                    const string sectionname,
+                                    const string key)
 {
-    cExtStringVector vals;
+    stringVector vals;
     if (!config.GetValues(sectionname, key, vals)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No %s specified in section %s",
                 key.c_str(), sectionname.c_str());
         exit(-1);
     }
 
-    cExtStringVector::iterator it;
+    stringVector::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         mLogger->logmsg(LOGLEVEL_INFO, "ADD %s %s", key.c_str(), it->c_str());
     }
@@ -106,7 +106,7 @@ cExtStringVector cMediaTester::getList (cConfigFileParser config,
 }
 
 bool cMediaTester::loadConfig (cConfigFileParser config,
-                                   const cExtString sectionname)
+                                   const string sectionname)
 {
     // Each media tester must read in at least the KEYS keyword.
     mKeylist = getList (config, sectionname, "KEYS");
@@ -117,8 +117,8 @@ bool cMediaTester::loadConfig (cConfigFileParser config,
     return true;
 }
 
-bool cMediaTester::typeMatches(const cExtString name) const
+bool cMediaTester::typeMatches(const string name)
 {
-    cExtString s = name.ToUpper();
+    string s = StringTools::ToUpper(name);
     return (s == mExt);
 }

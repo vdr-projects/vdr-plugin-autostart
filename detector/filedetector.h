@@ -16,7 +16,7 @@
 #include <set>
 #include <map>
 #include "mediatester.h"
-#include "extstring.h"
+#include "stringtools.h"
 
 
 class cFileDetector : public cMediaTester {
@@ -28,44 +28,45 @@ public:
         mConfiguredAutoMount = true;
     }
 
-    bool isMedia (const cMediaHandle d, cExtStringVector &keylist);
+    bool isMedia (const cMediaHandle d, stringVector &keylist);
     cMediaTester *create(cLogger *l) const {
         return new cFileDetector(l, mDescription, mExt);
     }
     bool loadConfig (cConfigFileParser config,
-                       const cExtString sectionname);
+                       const std::string sectionname);
     void startScan (cMediaHandle &d);
     void endScan (cMediaHandle &d);
     void removeDevice (cMediaHandle d);
 
 private:
+    cFileDetector() {};
     typedef struct {
-        cExtString devPath;
-        cExtString linkPath;
+        std::string devPath;
+        std::string linkPath;
     } DEVINFO;
-    typedef std::set<cExtString> StringSet;
-    typedef std::map<cExtString, DEVINFO> DevMap;
+    typedef std::set<std::string> stringSet;
+    typedef std::map<std::string, DEVINFO> DevMap;
 
-    static StringSet mDetectedSuffixCache;
+    static stringSet mDetectedSuffixCache;
     // Devices which are already processed
     static DevMap mDeviceMap;
     static std::string mLinkPath;
     static bool mAutoMount;
 
-    StringSet mSuffix;
-    cExtString mConfiguredLinkPath;
+    stringSet mSuffix;
+    std::string mConfiguredLinkPath;
     bool mConfiguredAutoMount;
 
 
     void ClearSuffixCache (void) {mDetectedSuffixCache.clear();}
-    bool FindSuffix (const cExtString str);
+    bool FindSuffix (const std::string str);
     std::string GetSuffix (const std::string str);
     void BuildSuffixCache (std::string path);
-    bool inDeviceSet(const cExtString dev) {
+    bool inDeviceSet(const std::string dev) {
         return (mDeviceMap.find(dev) != mDeviceMap.end());
     }
-    bool RmLink(const cExtString ln);
-    void Link(const cExtString ln);
+    bool RmLink(const std::string ln);
+    void Link(const std::string ln);
 };
 
 #endif /* FILEDETECTOR_H_ */

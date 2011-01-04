@@ -16,10 +16,10 @@ using namespace std;
 
 std::string cConfigFileParser::mWhiteSpace = " \t\n";
 
-void cConfigFileParser::AddKey (Key &kl, const cExtString &key, const cExtString &val)
+void cConfigFileParser::AddKey (Key &kl, const string &key, const string &val)
 {
     Key::iterator iter;
-    cExtStringVector vl;
+    stringVector vl;
     iter = kl.find(key);
     if (iter != kl.end()) {
         vl = iter->second;
@@ -30,14 +30,14 @@ void cConfigFileParser::AddKey (Key &kl, const cExtString &key, const cExtString
 
 }
 
-void cConfigFileParser::AddSection (cExtString sectionname,
-                                         cExtString key,
-                                         const cExtString val)
+void cConfigFileParser::AddSection (string sectionname,
+                                         string key,
+                                         const string val)
 {
     Section::iterator iter;
     Key kl;
-    sectionname = sectionname.ToUpper();
-    key = key.ToUpper();
+    sectionname = StringTools::ToUpper(sectionname);
+    key = StringTools::ToUpper(key);
     iter = mSections.find(sectionname);
     if (iter != mSections.end()) {
         kl = iter->second;
@@ -47,7 +47,7 @@ void cConfigFileParser::AddSection (cExtString sectionname,
     mSections[sectionname] = kl;
 }
 
-bool cConfigFileParser::isSection (const cExtString &token, cExtString &section)
+bool cConfigFileParser::isSection (const string &token, string &section)
 {
     size_t last = token.length()-1;
     if ((token.at(0) == '[') && (token.at(last) == ']')) {
@@ -57,10 +57,10 @@ bool cConfigFileParser::isSection (const cExtString &token, cExtString &section)
     return false;
 }
 
-cExtStringQueue cConfigFileParser::TokenizeLine (const cExtString line)
+stringQueue cConfigFileParser::TokenizeLine (const string line)
 {
-    cExtStringQueue q;
-    cExtString newstr;
+    stringQueue q;
+    string newstr;
     size_t i;
     char c;
     bool apo_active = false;
@@ -96,13 +96,13 @@ cExtStringQueue cConfigFileParser::TokenizeLine (const cExtString line)
     return q;
 }
 
-bool cConfigFileParser::ParseLine (const cExtString line)
+bool cConfigFileParser::ParseLine (const string line)
 {
     stringstream buffer(line);
-    cExtString token;
-    cExtString key;
+    string token;
+    string key;
     bool keysep = false;
-    cExtStringQueue q = TokenizeLine (line);
+    stringQueue q = TokenizeLine (line);
 
     while (!q.empty()) {
         token = q.front();
@@ -153,7 +153,7 @@ bool cConfigFileParser::ParseLine (const cExtString line)
 }
 
 // Parse the config file
-bool cConfigFileParser::Parse(const cExtString fname)
+bool cConfigFileParser::Parse(const string fname)
 {
     ifstream mFile;
     string line;
@@ -181,16 +181,17 @@ bool cConfigFileParser::Parse(const cExtString fname)
 
 // Find a key in a given section and return the values as Value List.
 // Returns true if the key was found.
-bool cConfigFileParser::GetValues (const cExtString sectionname,
-                                       const cExtString key,
-                                       cExtStringVector &values)
+bool cConfigFileParser::GetValues (const string sectionname,
+                                       const string key,
+                                       stringVector &values)
 {
     Section::iterator seciter;
     Key::iterator keyiter;
     Key kl;
 
-    cExtString section = sectionname.ToUpper();
-    cExtString k = key.ToUpper();
+    string section = StringTools::ToUpper(sectionname);
+    string k = StringTools::ToUpper(key);
+    values.clear();
     seciter = mSections.find(section);
     if (seciter == mSections.end()) {
         string err = "Can not find section " + section;
@@ -209,13 +210,13 @@ bool cConfigFileParser::GetValues (const cExtString sectionname,
 
 // Return a a key in a given section as single value (not split into a key list)
 
-bool cConfigFileParser::GetSingleValue (const cExtString sectionname,
-                                             const cExtString key,
-                                             cExtString &value)
+bool cConfigFileParser::GetSingleValue (const string sectionname,
+                                             const string key,
+                                             string &value)
 {
-    cExtStringVector vals;
+    stringVector vals;
 
-    cExtString plugin;
+    string plugin;
     if (!GetValues(sectionname, key, vals)) {
         return false;
     }
@@ -231,7 +232,7 @@ bool cConfigFileParser::GetSingleValue (const cExtString sectionname,
 
 // Get first section of a config file, returning the section name
 bool cConfigFileParser::GetFirstSection (Section::iterator &iter,
-                                              cExtString &sectionname)
+                                              string &sectionname)
 {
 
     if (mSections.empty()) {
@@ -245,7 +246,7 @@ bool cConfigFileParser::GetFirstSection (Section::iterator &iter,
 // Get next section, returning the section name
 // Returns false if no next section exist
 bool cConfigFileParser::GetNextSection (Section::iterator &iter,
-                                             cExtString &sectionname)
+                                             string &sectionname)
 {
     iter++;
     if (iter == mSections.end()) {

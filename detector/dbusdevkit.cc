@@ -18,6 +18,8 @@ using namespace std;
 const char *cDbusDevkit::DEVICEKIT_DISKS_SERVICE = "org.freedesktop.DeviceKit.Disks";
 const char *cDbusDevkit::DBUS_NAME = "vdr.plugin.mediadetector";
 const char *cDbusDevkit::UDISKS_SERVICE = "org.freedesktop.UDisks";
+const char *cDbusDevkit::DEVICEKIT_DISKS_OBJECT = "/org/freedesktop/DeviceKit/Disks";
+const char *cDbusDevkit::UDISKS_OBJECT = "/org/freedesktop/UDisks";
 
 cDeviceKitException::cDeviceKitException (const char *file, int line,
                                                 const std::string errtxt)
@@ -54,11 +56,14 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
 
     // Check if DEVICEKIT DISK or UDISK is available
     mService = DEVICEKIT_DISKS_SERVICE;
+    mObjectPath = DEVICEKIT_DISKS_OBJECT;
+
     if (!dbus_bus_start_service_by_name(mConnSystem, mService, 0,
                                         NULL, &mErr)) {
         mLogger->logmsg(LOGLEVEL_INFO, "Probe DeviceKit Disks (%s)", mErr.message);
         dbus_error_free(&mErr);
         mService = UDISKS_SERVICE;
+        mObjectPath = UDISKS_OBJECT;
         if (!dbus_bus_start_service_by_name(mConnSystem, mService, 0,
                                         NULL, &mErr)) {
             mLogger->logmsg(LOGLEVEL_ERROR, "No connection (%s)", mErr.message);
@@ -149,6 +154,60 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
     return true;
 }
 
+string cDbusDevkit::FindDeviceByDeviceFile (const string device)
+{
+    DBusMessage *msg, *getmsg;
+    DBusMessageIter iter;
+    char *val;
+
+    const char *dev = device.c_str();
+
+    WaitConn();
+
+    getmsg = dbus_message_new_method_call(mService,   // target for the method call
+                                       mObjectPath,       // object to call on
+                                       mService,          // interface to call on
+                                       "FindDeviceByDeviceFile");   // method name
+    if (getmsg == NULL) {
+        DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
+    }
+
+
+    dbus_message_append_args (getmsg,
+                           DBUS_TYPE_STRING, &dev,
+                           DBUS_TYPE_INVALID);
+
+    // send message and get a handle for a reply
+    msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                                                          -1,  &mErr);
+    if (dbus_error_is_set(&mErr)) {
+        string errmsg = "dbus_connection_send_with_reply failed";
+        errmsg += mErr.message;
+        dbus_error_free(&mErr);
+        DEVKITEXCEPTION(errmsg);
+    }
+
+    // free message
+    dbus_message_unref(getmsg);
+    // read the parameters
+    if (!dbus_message_iter_init(msg, &iter)) {
+        dbus_message_unref(msg);
+        DEVKITEXCEPTION("Message has no arguments " + device);
+    }
+
+    int msgtype = dbus_message_iter_get_arg_type(&iter);
+    if (msgtype != DBUS_TYPE_OBJECT_PATH) {
+        dbus_message_unref(msg);
+        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Object Path %c!", msgtype);
+        DEVKITEXCEPTION("Argument is not String " + device);
+    }
+
+    dbus_message_iter_get_basic(&iter, &val);
+    string retval = val;
+    // free reply and close connection
+    dbus_message_unref(msg);
+    return retval;
+}
 DBusMessage *cDbusDevkit::CallDbusProperty (const string &path,
                                         const string &name,
                                         DBusMessageIter *iter)

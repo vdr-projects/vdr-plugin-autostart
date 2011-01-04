@@ -19,12 +19,12 @@
 
 using namespace std;
 
-cFileDetector::StringSet cFileDetector::mDetectedSuffixCache;
+cFileDetector::stringSet cFileDetector::mDetectedSuffixCache;
 cFileDetector::DevMap cFileDetector::mDeviceMap;
 string cFileDetector::mLinkPath;
 bool cFileDetector::mAutoMount = true;
 
-bool cFileDetector::RmLink(const cExtString ln)
+bool cFileDetector::RmLink(const string ln)
 {
     struct stat s;
     const char *to = ln.c_str();
@@ -54,7 +54,7 @@ bool cFileDetector::RmLink(const cExtString ln)
     return true;
 }
 
-void cFileDetector::Link(const cExtString ln)
+void cFileDetector::Link(const string ln)
 {
     const char *from = ln.c_str();
     const char *to = mLinkPath.c_str();
@@ -69,7 +69,7 @@ void cFileDetector::Link(const cExtString ln)
     }
 }
 
-bool cFileDetector::FindSuffix (const cExtString str) {
+bool cFileDetector::FindSuffix (const string str) {
     if (mSuffix.find(str) == mSuffix.end()) {
         return (false);
     }
@@ -125,16 +125,16 @@ void cFileDetector::BuildSuffixCache (string path) {
     (void)closedir(dp);
 }
 
-bool cFileDetector::isMedia (cMediaHandle d, cExtStringVector &keylist)
+bool cFileDetector::isMedia (cMediaHandle d, stringVector &keylist)
 {
     bool found = false;
-    cExtString mountpath;
+    string mountpath;
 
     if (mDetectedSuffixCache.empty()) {
         return false;
     }
-    StringSet::iterator it;
-    cExtString s;
+    stringSet::iterator it;
+    string s;
     for (it = mDetectedSuffixCache.begin(); it != mDetectedSuffixCache.end(); it++) {
         s = *it;
         if (FindSuffix(s)) {
@@ -152,19 +152,19 @@ bool cFileDetector::isMedia (cMediaHandle d, cExtStringVector &keylist)
 }
 
 bool cFileDetector::loadConfig (cConfigFileParser config,
-                                    const cExtString sectionname)
+                                    const string sectionname)
 {
     if (!cMediaTester::loadConfig(config, sectionname)) {
         return false;
     }
 
-    cExtStringVector vals;
+    stringVector vals;
     if (!config.GetValues(sectionname, "FILES", vals)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No files specified");
         return false;
     }
 
-    cExtStringVector::iterator it;
+    stringVector::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         string s = *it;
         mSuffix.insert(s);
@@ -175,9 +175,9 @@ bool cFileDetector::loadConfig (cConfigFileParser config,
     config.GetSingleValue(sectionname, "LINKPATH", mConfiguredLinkPath);
     mLogger->logmsg(LOGLEVEL_INFO, "Linkpath : %s", mConfiguredLinkPath.c_str());
     // Read Automount
-    cExtString automount;
+    string automount;
     if (config.GetSingleValue(sectionname, "AUTOMOUNT", automount)) {
-        automount.ToUpper();
+        automount = StringTools::ToUpper(automount);
         if (automount == "YES") {
             mConfiguredAutoMount = true;
         }
@@ -197,7 +197,7 @@ bool cFileDetector::loadConfig (cConfigFileParser config,
 void cFileDetector::startScan (cMediaHandle &d)
 {
     MEDIA_MASK_T m = d.GetMediaMask();
-    cExtString dev = d.GetDeviceFile();
+    string dev = d.GetDeviceFile();
 
     mLinkPath.clear();
     mDetectedSuffixCache.clear();
@@ -222,7 +222,7 @@ void cFileDetector::startScan (cMediaHandle &d)
 
 void cFileDetector::endScan (cMediaHandle &d)
 {
-    cExtString dev = d.GetDeviceFile();
+    string dev = d.GetDeviceFile();
     if (inDeviceSet(dev)) {
         mLogger->logmsg(LOGLEVEL_INFO, "endScan Device already in device set");
         return;
@@ -243,10 +243,10 @@ void cFileDetector::endScan (cMediaHandle &d)
 
 void cFileDetector::removeDevice (cMediaHandle d)
 {
-    cExtString path = d.GetPath();
+    string path = d.GetPath();
     mLogger->logmsg(LOGLEVEL_INFO, "Removing %s", path.c_str());
     DevMap::iterator it;
-    cExtString s;
+    string s;
     for (it = mDeviceMap.begin(); it != mDeviceMap.end(); it++) {
         DEVINFO dev = it->second;
         if (dev.devPath == path) {
