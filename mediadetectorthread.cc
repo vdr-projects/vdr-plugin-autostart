@@ -16,10 +16,10 @@
 using namespace std;
 
 #ifdef DEBUG
-void cMediaDetectorThread::logkeylist(stringVector vl)
+void cMediaDetectorThread::logkeylist(stringList vl)
 {
     cLogger log;
-    stringVector::iterator it;
+    stringList::iterator it;
     for (it = vl.begin(); it != vl.end(); it++) {
         mLogger.logmsg(LOGLEVEL_ERROR, "   %s", it->c_str());
     }
@@ -28,7 +28,7 @@ void cMediaDetectorThread::logkeylist(stringVector vl)
 
 void cMediaDetectorThread::Action(void)
 {
-    stringVector vl;
+    stringList vl;
     cPlugin *p;
     AutoStartService service;
     cMediaHandle mediadescr(&mLogger);

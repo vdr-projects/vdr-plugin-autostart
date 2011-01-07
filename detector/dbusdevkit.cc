@@ -38,6 +38,12 @@ cDbusDevkit::cDbusDevkit(cLogger *logger)
     dbus_error_init(&mErr);
 }
 
+cDbusDevkit::~cDbusDevkit()
+{
+    if (mConnSystem != NULL) {
+        dbus_connection_unref (mConnSystem);
+    }
+}
 bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
 {
     // connect to the bus and check for errors
@@ -88,6 +94,7 @@ bool cDbusDevkit::WaitConn (void) throw (cDeviceKitException)
     dbus_bus_add_match (mConnSystem, rule.c_str(), &mErr); // see signals from the given interface
     if (dbus_error_is_set(&mErr)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "Match Error (%s)", mErr.message);
+        dbus_error_free(&mErr);
         return false;
     }
 
@@ -156,10 +163,11 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
 
 string cDbusDevkit::FindDeviceByDeviceFile (const string device)
 {
-    DBusMessage *msg, *getmsg;
+    DBusMessage *msg = NULL;
+    DBusMessage *getmsg = NULL;
     DBusMessageIter iter;
     char *val;
-
+    string retval;
     const char *dev = device.c_str();
 
     WaitConn();
@@ -172,88 +180,105 @@ string cDbusDevkit::FindDeviceByDeviceFile (const string device)
         DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
     }
 
+    try {
+        dbus_message_append_args(getmsg, DBUS_TYPE_STRING, &dev,
+                                     DBUS_TYPE_INVALID);
 
-    dbus_message_append_args (getmsg,
-                           DBUS_TYPE_STRING, &dev,
-                           DBUS_TYPE_INVALID);
+        // send message and get a handle for a reply
+        msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                                                              -1, &mErr);
+        if (dbus_error_is_set(&mErr)) {
+            string errmsg = "dbus_connection_send_with_reply failed";
+            errmsg += mErr.message;
+            dbus_error_free(&mErr);
+            DEVKITEXCEPTION(errmsg);
+        }
 
-    // send message and get a handle for a reply
-    msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
-                                                          -1,  &mErr);
-    if (dbus_error_is_set(&mErr)) {
-        string errmsg = "dbus_connection_send_with_reply failed";
-        errmsg += mErr.message;
-        dbus_error_free(&mErr);
-        DEVKITEXCEPTION(errmsg);
-    }
+        // read the parameters
+        if (!dbus_message_iter_init(msg, &iter)) {
+            DEVKITEXCEPTION("Message has no arguments " + device);
+        }
 
-    // free message
-    dbus_message_unref(getmsg);
-    // read the parameters
-    if (!dbus_message_iter_init(msg, &iter)) {
+        int msgtype = dbus_message_iter_get_arg_type(&iter);
+        if (msgtype != DBUS_TYPE_OBJECT_PATH) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Object Path %c!",
+                                            msgtype);
+            DEVKITEXCEPTION("Argument is not String " + device);
+        }
+        dbus_message_iter_get_basic(&iter, &val);
+        retval = val;
+
+        // free message
+        dbus_message_unref(getmsg);
+        // free reply and close connection
         dbus_message_unref(msg);
-        DEVKITEXCEPTION("Message has no arguments " + device);
+    } catch (cDeviceKitException &e) {
+        if (getmsg != NULL) {
+            dbus_message_unref(getmsg);
+        }
+        if (msg != NULL) {
+            dbus_message_unref(msg);
+        }
+        throw;
     }
-
-    int msgtype = dbus_message_iter_get_arg_type(&iter);
-    if (msgtype != DBUS_TYPE_OBJECT_PATH) {
-        dbus_message_unref(msg);
-        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Object Path %c!", msgtype);
-        DEVKITEXCEPTION("Argument is not String " + device);
-    }
-
-    dbus_message_iter_get_basic(&iter, &val);
-    string retval = val;
-    // free reply and close connection
-    dbus_message_unref(msg);
     return retval;
 }
+
 DBusMessage *cDbusDevkit::CallDbusProperty (const string &path,
-                                        const string &name,
-                                        DBusMessageIter *iter)
-                                        throw (cDeviceKitException)
+                                                const string &name,
+                                                DBusMessageIter *iter)
+                                                throw (cDeviceKitException)
 {
-    DBusMessage *msg, *getmsg;
+    DBusMessage *msg = NULL;
+    DBusMessage *getmsg = NULL;
 
     getmsg = dbus_message_new_method_call(mService,   // target for the method call
                                        path.c_str(),                // object to call on
                                        "org.freedesktop.DBus.Properties", // interface to call on
-                                       "Get");              // method name
+                                       "Get"); // method name
     if (getmsg == NULL) {
         DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
     }
 
-    const char *dev_inter = mDevicekitInterface.c_str();
-    const char *na = name.c_str();
+    try {
+        const char *dev_inter = mDevicekitInterface.c_str();
+        const char *na = name.c_str();
 
-    dbus_message_append_args (getmsg,
-                           DBUS_TYPE_STRING, &dev_inter,
-                           DBUS_TYPE_STRING, &na,
-                           DBUS_TYPE_INVALID);
+        dbus_message_append_args(getmsg, DBUS_TYPE_STRING, &dev_inter,
+                                    DBUS_TYPE_STRING, &na, DBUS_TYPE_INVALID);
 
-    // send message and get a handle for a reply
-    msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
-                                                          -1,  &mErr);
-    if (dbus_error_is_set(&mErr)) {
-        string errmsg = "dbus_connection_send_with_reply failed";
-        errmsg += mErr.message;
-        dbus_error_free(&mErr);
-        DEVKITEXCEPTION(errmsg);
-    }
+        // send message and get a handle for a reply
+        msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                                                              -1, &mErr);
+        if (dbus_error_is_set(&mErr)) {
+            string errmsg = "dbus_connection_send_with_reply failed";
+            errmsg += mErr.message;
+            dbus_error_free(&mErr);
+            DEVKITEXCEPTION(errmsg);
+        }
 
-    // free message
-    dbus_message_unref(getmsg);
-    // read the parameters
-    if (!dbus_message_iter_init(msg, iter)) {
-        dbus_message_unref(msg);
-        DEVKITEXCEPTION("Message has no arguments " + name);
-    }
+        // read the parameters
+        if (!dbus_message_iter_init(msg, iter)) {
 
-    int msgtype = dbus_message_iter_get_arg_type(iter);
-    if (msgtype != DBUS_TYPE_VARIANT) {
-        dbus_message_unref(msg);
-        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
-        DEVKITEXCEPTION("Argument is not Variant " + name);
+            DEVKITEXCEPTION("Message has no arguments " + name);
+        }
+
+        int msgtype = dbus_message_iter_get_arg_type(iter);
+        if (msgtype != DBUS_TYPE_VARIANT) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not Variant " + name);
+        }
+        // free message
+        dbus_message_unref(getmsg);
+    } catch (cDeviceKitException &e) {
+        if (getmsg != NULL) {
+            dbus_message_unref(getmsg);
+        }
+        if (msg != NULL) {
+            dbus_message_unref(msg);
+        }
+        throw;
     }
     return msg;
 }
@@ -283,47 +308,55 @@ string cDbusDevkit::GetDbusPropertyS (const string &path,
     return retval;
 }
 
-cDbusDevkit::StringArray cDbusDevkit::GetDbusPropertyAS (const string &path,
+cDbusDevkit::StringList cDbusDevkit::GetDbusPropertyAS (const string &path,
                                                 const string &name)
                                                 throw (cDeviceKitException)
 {
     DBusMessage *msg = NULL;
     DBusMessageIter iter;
     DBusMessageIter subiter;
-    StringArray retval;
+    StringList retval;
     string s;
     char *val;
 
     msg = CallDbusProperty(path, name, &iter);
+    try {
+        if (!dbus_message_iter_init(msg, &iter)) {
+            DEVKITEXCEPTION("Message has no arguments!");
+        }
 
-    if (!dbus_message_iter_init(msg, &iter)) {
-        dbus_message_unref(msg);
-        DEVKITEXCEPTION("Message has no arguments!");
-    }
+        int msgtype = dbus_message_iter_get_arg_type(&iter);
+        if (msgtype != DBUS_TYPE_VARIANT) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not Variant");
+        }
+        dbus_message_iter_recurse(&iter, &subiter);
+        msgtype = dbus_message_iter_get_arg_type(&subiter);
+        if (msgtype != DBUS_TYPE_ARRAY) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Array %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not Array");
+        }
+        dbus_message_iter_recurse(&subiter, &iter);
+        msgtype = dbus_message_iter_get_arg_type(&iter);
+        if (msgtype != DBUS_TYPE_STRING) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not String %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not Array");
+        }
 
-    int msgtype = dbus_message_iter_get_arg_type(&iter);
-    if (msgtype != DBUS_TYPE_VARIANT) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Variant %c!", msgtype);
-        DEVKITEXCEPTION("Argument is not Variant");
+        do {
+            dbus_message_iter_get_basic(&iter, &val);
+            s = val;
+            retval.push_back(s);
+        } while (dbus_message_iter_next(&iter));
+    } catch (cDeviceKitException &e) {
+        if (msg != NULL) {
+            dbus_message_unref(msg);
+        }
+        throw;
     }
-    dbus_message_iter_recurse(&iter, &subiter);
-    msgtype = dbus_message_iter_get_arg_type(&subiter);
-    if (msgtype != DBUS_TYPE_ARRAY) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not Array %c!", msgtype);
-        DEVKITEXCEPTION("Argument is not Array");
-    }
-    dbus_message_iter_recurse(&subiter, &iter);
-    msgtype = dbus_message_iter_get_arg_type(&iter);
-    if (msgtype != DBUS_TYPE_STRING) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not String %c!", msgtype);
-        DEVKITEXCEPTION("Argument is not Array");
-    }
-
-    do {
-        dbus_message_iter_get_basic(&iter, &val);
-        s = val;
-        retval.push_back(s);
-    } while (dbus_message_iter_next (&iter));
     // free reply and close connection
     dbus_message_unref(msg);
     return retval;
@@ -386,43 +419,51 @@ string cDbusDevkit::AutoMount(const string path)
     int argcnt = 0;
     string retval;
 
-    getmsg = dbus_message_new_method_call(mService,   // target for the method call
-                                       path.c_str(),                // object to call on
-                                       mDevicekitInterface.c_str(), // interface to call on
-                                       "FilesystemMount");              // method name
-    if (getmsg == NULL) {
-        DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
+    try {
+        getmsg = dbus_message_new_method_call(mService, // target for the method call
+                path.c_str(), // object to call on
+                mDevicekitInterface.c_str(), // interface to call on
+                "FilesystemMount"); // method name
+        if (getmsg == NULL) {
+            DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
+        }
+
+        dbus_message_append_args(getmsg, DBUS_TYPE_STRING, &fs_type,
+                DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, opts, &argcnt,
+                DBUS_TYPE_INVALID);
+        msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                -1, &mErr);
+        if (dbus_error_is_set(&mErr)) {
+            string errmsg = "dbus_connection_send_with_reply failed";
+            errmsg += mErr.message;
+            dbus_error_free(&mErr);
+            DEVKITEXCEPTION(errmsg);
+        }
+
+        DBusMessageIter args;
+        // read the parameters
+        if (!dbus_message_iter_init(msg, &args)) {
+            dbus_message_unref(msg);
+            DEVKITEXCEPTION("Message has no arguments!");
+        }
+
+        int msgtype = dbus_message_iter_get_arg_type(&args);
+        if (msgtype != DBUS_TYPE_STRING) {
+            dbus_message_unref(msg);
+            mLogger->logmsg(LOGLEVEL_ERROR, "Return value is not String %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Return value is not String");
+        }
+        dbus_message_iter_get_basic(&args, &val);
+    } catch (cDeviceKitException &e) {
+        if (msg != NULL) {
+            dbus_message_unref(msg);
+        }
+        throw;
     }
 
-    dbus_message_append_args (getmsg,
-                           DBUS_TYPE_STRING, &fs_type,
-                           DBUS_TYPE_ARRAY, DBUS_TYPE_STRING, opts, &argcnt,
-                           DBUS_TYPE_INVALID);
-    msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
-                                                          -1,  &mErr);
-    if (dbus_error_is_set(&mErr)) {
-        string errmsg = "dbus_connection_send_with_reply failed";
-        errmsg += mErr.message;
-        dbus_error_free(&mErr);
-        DEVKITEXCEPTION(errmsg);
-    }
-
-    DBusMessageIter args;
-    // read the parameters
-    if (!dbus_message_iter_init(msg, &args)) {
-        dbus_message_unref(msg);
-        DEVKITEXCEPTION("Message has no arguments!");
-    }
-
-    int msgtype = dbus_message_iter_get_arg_type(&args);
-    if (msgtype != DBUS_TYPE_STRING) {
-        dbus_message_unref (msg);
-        mLogger->logmsg(LOGLEVEL_ERROR, "Return value is not String %c!", msgtype);
-        DEVKITEXCEPTION("Return value is not String");
-    }
-    dbus_message_iter_get_basic(&args, &val);
     retval = val;
-    dbus_message_unref (msg);
+    dbus_message_unref(msg);
     return retval;
 }
 

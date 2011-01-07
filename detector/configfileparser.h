@@ -16,16 +16,14 @@
 #include <string>
 #include <list>
 #include <map>
-#include <vector>
 #include <queue>
 #include <algorithm>
 
-#include "stringtools.h"
 #include "logger.h"
 
 typedef std::queue<std::string> stringQueue;
-typedef std::vector<std::string> stringVector;
-typedef std::map<std::string, stringVector> Key;
+typedef std::list<std::string> stringList;
+typedef std::map<std::string, stringList> Key;
 typedef std::map<std::string, Key> Section;
 
 class cConfigFileParser {
@@ -41,14 +39,15 @@ private:
     bool isComment (const std::string &token) {return (token.at(0) == ';');}
     bool ParseLine (const std::string line);
     stringQueue TokenizeLine (const std::string line);
-public:
+    cConfigFileParser() {};
 
+public:
     cConfigFileParser(cLogger *l) {mLogger = l;}
     bool Parse (const std::string filename);
     bool GetFirstSection (Section::iterator &iter, std::string &sectionname);
     bool GetNextSection (Section::iterator &iter, std::string &sectionname);
     bool GetValues (const std::string sectionname, const std::string key,
-                      stringVector &values);
+                      stringList &values);
     bool GetSingleValue (const std::string sectionname, const std::string key,
                            std::string &values);
 };

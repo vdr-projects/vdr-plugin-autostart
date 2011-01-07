@@ -22,7 +22,7 @@ private:
     cMediaDetector mDetector;
     std::string mPluginName;
 #ifdef DEBUG
-    void logkeylist(stringVector vl);
+    void logkeylist(stringList vl);
 #endif
 
 public:

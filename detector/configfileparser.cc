@@ -11,6 +11,7 @@
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  */
 #include "configfileparser.h"
+#include "stringtools.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ std::string cConfigFileParser::mWhiteSpace = " \t\n";
 void cConfigFileParser::AddKey (Key &kl, const string &key, const string &val)
 {
     Key::iterator iter;
-    stringVector vl;
+    stringList vl;
     iter = kl.find(key);
     if (iter != kl.end()) {
         vl = iter->second;
@@ -183,7 +184,7 @@ bool cConfigFileParser::Parse(const string fname)
 // Returns true if the key was found.
 bool cConfigFileParser::GetValues (const string sectionname,
                                        const string key,
-                                       stringVector &values)
+                                       stringList &values)
 {
     Section::iterator seciter;
     Key::iterator keyiter;
@@ -214,7 +215,7 @@ bool cConfigFileParser::GetSingleValue (const string sectionname,
                                              const string key,
                                              string &value)
 {
-    stringVector vals;
+    stringList vals;
 
     string plugin;
     if (!GetValues(sectionname, key, vals)) {
@@ -225,7 +226,7 @@ bool cConfigFileParser::GetSingleValue (const string sectionname,
         mLogger->logmsg(LOGLEVEL_ERROR,err.c_str());
         return false;
     }
-    value = vals[0];
+    value = vals.front();
     return true;
 }
 

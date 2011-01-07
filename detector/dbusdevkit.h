@@ -14,7 +14,7 @@
 
 #include <dbus/dbus.h>
 #include <string>
-#include <vector>
+#include <list>
 #include <exception>
 #include <stdio.h>
 #include "logger.h"
@@ -39,7 +39,7 @@ public:
 
 class cDbusDevkit {
 public:
-    typedef std::vector<std::string> StringArray;
+    typedef std::list<std::string> StringList;
     typedef enum {
         DeviceAdded,
         DeviceRemoved,
@@ -48,7 +48,7 @@ public:
     } DEVICE_SIGNAL;
 
     cDbusDevkit(cLogger *logger);
-
+    ~cDbusDevkit();
     bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
 
     std::string FindDeviceByDeviceFile (const std::string device);
@@ -76,7 +76,7 @@ public:
         const std::string name = "device-file";
         return GetDbusPropertyS (path, name);
     }
-    StringArray GetMountPaths (const std::string &path)
+    StringList GetMountPaths (const std::string &path)
                                  throw (cDeviceKitException) {
         const std::string name = "DeviceMountPaths";
         return GetDbusPropertyAS (path, name);
@@ -128,7 +128,7 @@ public:
                                     const std::string &name)
                                     throw (cDeviceKitException);
     // Property as (String Array)
-    StringArray GetDbusPropertyAS (const std::string &path,
+    StringList GetDbusPropertyAS (const std::string &path,
                                      const std::string &name)
                                      throw (cDeviceKitException);
     // Property u

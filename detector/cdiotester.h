@@ -17,12 +17,12 @@
 class cCdioTester : public cMediaTester
 {
 public:
-    cCdioTester(cLogger *l, std::string descr, std::string ext) {
+    cCdioTester(cLogger *l, const std::string descr, const std::string ext) {
         mLogger = l;
         mDescription = descr;
         mExt = ext;
     }
-    bool isMedia (cMediaHandle d, stringVector &keylist);
+    bool isMedia (cMediaHandle d, stringList &keylist);
     cMediaTester *create(cLogger *l) const {
         return new cCdioTester(l, mDescription, mExt);
     }

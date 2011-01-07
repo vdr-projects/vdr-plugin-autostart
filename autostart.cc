@@ -138,8 +138,8 @@ bool cPluginAutostart::Service(const char *Id, void *Data)
 
 void cSenderThread::Action(void)
 {
-    stringVector vl = as.mKeyList;
-    stringVector::iterator it;
+    stringList vl = as.mKeyList;
+    stringList::iterator it;
     cPlugin *p;
 
     for (it = vl.begin(); it != vl.end(); it++) {

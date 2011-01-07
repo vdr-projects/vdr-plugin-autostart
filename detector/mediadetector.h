@@ -27,41 +27,43 @@ public:
         LAST_MODE
     } WORKING_MODE;
 
-    cMediaDetector(cLogger *l) : mConfigFileParser(l), mDevkit(l), mMediaTesters(10){
+    cMediaDetector(cLogger *l) : mConfigFileParser(l), mDevkit(l) {
         mRunning = false;
         mWorkingMode = AUTO_START;
         mManualScan = false;
-
     }
+
     ~cMediaDetector();
     bool InitDetector(cLogger *logger, const std::string initfile);
     // Stop detector
     void Stop(void) { mRunning = false; };
     // Wait for a media change, detect the media and return the associated
     // key list and media information.
-    stringVector Detect(std::string &description, cMediaHandle &mediainfo);
+    stringList Detect(std::string &description, cMediaHandle &mediainfo);
     // Change working mode
     void SetWorkingMode (WORKING_MODE mode) {mWorkingMode = mode;}
     void StartManualScan (void) { mManualScan = true; };
+
 private:
-    typedef std::map<std::string, stringVector> PluginMap;
-    typedef std::vector<cMediaTester *> MediaTesterVector;
+  //  typedef std::map<std::string, stringList> PluginMap;
+    typedef std::list<cMediaTester *> MediaTesterList;
     typedef std::set<std::string> stringSet;
 
     cLogger *mLogger;
-
-    MediaTesterVector mRegisteredMediaTesters;
-    PluginMap mPlugins;
     cConfigFileParser mConfigFileParser;
+
+    MediaTesterList mRegisteredMediaTesters;
+    MediaTesterList mMediaTesters;
+   // PluginMap mPlugins;
+
     cDbusDevkit mDevkit;
 
-    MediaTesterVector mMediaTesters;
     WORKING_MODE mWorkingMode;
     // Devices in filter list
     stringSet mFilterDevices;
     // Devices which are known due to insertion of a removable media
     stringSet mKnownDevices;
-    // Devices to alway scan, when manual scan is started
+    // Devices to always scan, when manual scan is started
     stringSet mScanDevices;
 
     volatile bool mRunning;
@@ -72,19 +74,18 @@ private:
     void RegisterTester(const cMediaTester *, const cConfigFileParser &,
                           const std::string);
     bool InDeviceFilter(const std::string dev);
-    bool DoDetect(cMediaHandle &, std::string &, stringVector &);
-    bool DoManualScan(cMediaHandle &, std::string &, stringVector &);
+    bool DoDetect(cMediaHandle &, std::string &, stringList &);
+    bool DoManualScan(cMediaHandle &, std::string &, stringList &);
     void DoDeviceRemoved(cMediaHandle mediainfo);
 
 #ifdef DEBUG
-    void logkeylist (stringVector vl) {
-        stringVector::iterator it;
+    void logkeylist (stringList vl) {
+        stringList::iterator it;
         for (it = vl.begin(); it != vl.end(); it++) {
             mLogger->logmsg(LOGLEVEL_INFO, "   %s", it->c_str());
         }
     }
 #endif
-
 
 };
 #endif /* MEDIADETECTOR_H_ */

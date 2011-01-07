@@ -70,7 +70,7 @@ bool cMediaHandle::AutoMount(void)
                 mLogger->logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
                         mDevKit->AutoMount(mPath).c_str());
             }
-            mMountPath = mDevKit->GetMountPaths(mPath).at(0);
+            mMountPath = mDevKit->GetMountPaths(mPath).front();
             mLogger->logmsg(LOGLEVEL_INFO, "Mount Path %s", mMountPath.c_str());
             return true;
         } catch (cDeviceKitException &e) {
@@ -87,18 +87,18 @@ void cMediaHandle::Umount(void)
     mMountPath.clear();
 }
 
-stringVector cMediaTester::getList (cConfigFileParser config,
+stringList cMediaTester::getList (cConfigFileParser config,
                                     const string sectionname,
                                     const string key)
 {
-    stringVector vals;
+    stringList vals;
     if (!config.GetValues(sectionname, key, vals)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No %s specified in section %s",
                 key.c_str(), sectionname.c_str());
         exit(-1);
     }
 
-    stringVector::iterator it;
+    stringList::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         mLogger->logmsg(LOGLEVEL_INFO, "ADD %s %s", key.c_str(), it->c_str());
     }

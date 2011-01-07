@@ -125,7 +125,7 @@ void cFileDetector::BuildSuffixCache (string path) {
     (void)closedir(dp);
 }
 
-bool cFileDetector::isMedia (cMediaHandle d, stringVector &keylist)
+bool cFileDetector::isMedia (cMediaHandle d, stringList &keylist)
 {
     bool found = false;
     string mountpath;
@@ -158,13 +158,13 @@ bool cFileDetector::loadConfig (cConfigFileParser config,
         return false;
     }
 
-    stringVector vals;
+    stringList vals;
     if (!config.GetValues(sectionname, "FILES", vals)) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No files specified");
         return false;
     }
 
-    stringVector::iterator it;
+    stringList::iterator it;
     for (it = vals.begin(); it != vals.end(); it++) {
         string s = *it;
         mSuffix.insert(s);

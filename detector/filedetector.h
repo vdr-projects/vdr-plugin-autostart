@@ -28,7 +28,7 @@ public:
         mConfiguredAutoMount = true;
     }
 
-    bool isMedia (const cMediaHandle d, stringVector &keylist);
+    bool isMedia (const cMediaHandle d, stringList &keylist);
     cMediaTester *create(cLogger *l) const {
         return new cFileDetector(l, mDescription, mExt);
     }

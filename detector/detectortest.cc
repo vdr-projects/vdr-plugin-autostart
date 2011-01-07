@@ -19,24 +19,25 @@
 
 using namespace std;
 
-void logkeylist(stringVector vl)
+void logkeylist(stringList vl)
 {
     cLogger log;
-    stringVector::iterator it;
+    stringList::iterator it;
     for (it = vl.begin(); it != vl.end(); it++) {
         log.logmsg(LOGLEVEL_ERROR, "   %s", it->c_str());
     }
 }
-int main()
+int main(int argc, const char* argv[])
 {
     cLogger log;
     cMediaDetector detector(&log);
-    stringVector vl;
+    stringList vl;
     string descr;
     cMediaHandle ha;
+    int i;
 
     detector.InitDetector(&log, "/tmp/test.conf");
-    while (true) {
+    for (i=0; i < 3; i++) {
         vl = detector.Detect(descr, ha);
         log.logmsg(LOGLEVEL_ERROR, "\n%s Keylist : ", descr.c_str());
         logkeylist(vl);

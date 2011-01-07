@@ -61,19 +61,19 @@ class cMediaTester
 {
 protected:
     cLogger *mLogger;
-    stringVector mKeylist;
+    stringList mKeylist;
     std::string mDescription;
     std::string mExt;
 
 public:
     virtual bool loadConfig (cConfigFileParser config,
                                 const std::string sectionname);
-    virtual bool isMedia (cMediaHandle d, stringVector &keylist) = 0;
+    virtual bool isMedia (cMediaHandle d, stringList &keylist) = 0;
     virtual cMediaTester *create(cLogger *) const = 0;
     virtual void startScan (cMediaHandle &d) {};
     virtual void endScan (cMediaHandle &d) {};
     virtual void removeDevice (cMediaHandle d) {};
-    virtual stringVector getList (cConfigFileParser config,
+    virtual stringList getList (cConfigFileParser config,
                                 const std::string sectionname,
                                 const std::string key);
     virtual bool typeMatches (const std::string name);

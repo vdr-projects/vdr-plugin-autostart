@@ -24,6 +24,8 @@ typedef enum {
 // Default Logging Class for logging to stderr/stdout
 class cLogger {
 public:
+    cLogger() {};
+    virtual ~cLogger() {};
     virtual void logmsg (LOG_LEVEL severity, const char *format, ...) {
         va_list ap;
         va_start(ap, format);
@@ -38,6 +40,8 @@ public:
         }
         va_end(ap);
     }
+
+
 };
 
 #endif /* LOGGER_H_ */

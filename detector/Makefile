@@ -3,6 +3,7 @@ include ../Makefile.inc
 OBJS = cdiotester.o configfileparser.o dbusdevkit.o \
 		filedetector.o mediadetector.o mediatester.o \
 		videodvdtester.o
+HEADER = $(OBJS:%.o=%.h) logger.h stringtools.h
 
 OBJLIBS = ../detector.a 
 
@@ -12,12 +13,12 @@ TESTOBJS = detectortest.o
 
 all: $(OBJLIBS)
 
-$(OBJLIBS): $(OBJS) 
+$(OBJLIBS): $(OBJS) $(HEADER)
 	@echo $(AR) $(ARFLAGS) $@ $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
 	
 clean:
-	@-rm -f $(OBJS)
+	@-rm -f $(OBJS) $(TESTOBJS)
 	@-rm -f $(OBJLIBS)
 	@-rm -f detectortest
 	@-rm -f core
@@ -32,10 +33,10 @@ clean:
 MAKEDEP = $(CXX) -MM -MG
 DEPFILE = .dependencies
 $(DEPFILE): Makefile
-	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) > $@
+	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) $(HEADER)> $@
 
 ### Build test programm
-test: $(TESTOBJS) $(OBJLIBS) $(OBJS)
+test: $(TESTOBJS) $(OBJLIBS) $(OBJS) $(HEADER)
 	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) $(OBJLIBS) -o detectortest
 	
 force_look :

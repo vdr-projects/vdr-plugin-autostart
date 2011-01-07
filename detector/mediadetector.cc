@@ -17,7 +17,7 @@ using namespace std;
 
 cMediaDetector::~cMediaDetector()
 {
-    MediaTesterVector::iterator it;
+    MediaTesterList::iterator it;
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
         delete *it;
     }
@@ -47,7 +47,7 @@ void cMediaDetector::RegisterTester(const cMediaTester *tester,
 bool cMediaDetector::AddDetector (const string section)
 {
     bool found = false;
-    stringVector vals;
+    stringList vals;
     mLogger->logmsg(LOGLEVEL_INFO, "Section %s", section.c_str());
     string type;
     if (!mConfigFileParser.GetSingleValue(section, "TYPE", type)) {
@@ -55,7 +55,7 @@ bool cMediaDetector::AddDetector (const string section)
         return false;
     }
 
-    MediaTesterVector::iterator it;
+    MediaTesterList::iterator it;
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
         cMediaTester *te = *it;
         if (te->typeMatches(type)) {
@@ -73,8 +73,8 @@ bool cMediaDetector::AddDetector (const string section)
 // Read global options for the plugin
 bool cMediaDetector::AddGlobalOptions (const string sectionname)
 {
-    stringVector vals;
-    stringVector::iterator it;
+    stringList vals;
+    stringList::iterator it;
     string dev;
 
     if (sectionname != "GLOBAL") {
@@ -121,9 +121,10 @@ bool cMediaDetector::InitDetector(cLogger *logger,
 
     mLogger = logger;
     // Initialize known media testers
-
-    mMediaTesters.clear();
-    mMediaTesters.push_back(new cCdioTester(logger, "Audio CD", "CD"));
+cCdioTester *t = new cCdioTester(logger, "Audio CD", "CD");
+mRegisteredMediaTesters.clear();
+mMediaTesters.clear();
+    mMediaTesters.push_back(t);
     mMediaTesters.push_back(new cVideoDVDTester(logger, "Video DVD", "DVD"));
     mMediaTesters.push_back(new cFileDetector(logger, "Files", "FILE"));
 
@@ -168,7 +169,7 @@ bool cMediaDetector::InDeviceFilter(const string dev)
 // Handle when a device is removed
 void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
 {
-    MediaTesterVector::iterator it;
+    MediaTesterList::iterator it;
     // Cleanup device caches for each detector
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
         cMediaTester *t = *it;
@@ -182,7 +183,7 @@ void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
 }
 
 bool cMediaDetector::DoManualScan(cMediaHandle &mediainfo,
-                                  string &description,  stringVector &vl)
+                                  string &description,  stringList &vl)
 {
     stringSet::iterator it;
     for (it = mKnownDevices.begin(); it != mKnownDevices.end(); it++) {
@@ -214,11 +215,11 @@ bool cMediaDetector::DoManualScan(cMediaHandle &mediainfo,
 }
 
 bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
-                                  string &description,  stringVector &vl)
+                                  string &description,  stringList &vl)
 {
-    stringVector keylist;
+    stringList keylist;
     bool found = false;
-    MediaTesterVector::iterator it;
+    MediaTesterList::iterator it;
     string dev = mediainfo.GetDeviceFile();
     if (!mManualScan) {
         if (mScanDevices.find(dev) == mScanDevices.end()) {
@@ -275,12 +276,12 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
     return found;
 }
 
-stringVector cMediaDetector::Detect(string &description,
+stringList cMediaDetector::Detect(string &description,
                                            cMediaHandle &mediainfo)
 {
     string path;
     cMediaHandle descr(mLogger);
-    stringVector keylist;
+    stringList keylist;
     cDbusDevkit::DEVICE_SIGNAL signal;
     mRunning = true;
     mManualScan = false;
@@ -306,7 +307,7 @@ stringVector cMediaDetector::Detect(string &description,
 
                     if (mDevkit.IsMounted(path)) {
                         mLogger->logmsg(LOGLEVEL_INFO, "Mounted -----> %s",
-                                mDevkit.GetMountPaths(path).at(0).c_str());
+                                mDevkit.GetMountPaths(path).front().c_str());
                     }
                     if (mDevkit.IsOpticalDisk(path)) {
                         mLogger->logmsg(LOGLEVEL_INFO, "Optical Disk ");
@@ -318,25 +319,27 @@ stringVector cMediaDetector::Detect(string &description,
                         mLogger->logmsg(LOGLEVEL_INFO, "Media Available ");
                     }
 #endif
+                    if (InDeviceFilter(descr.GetDeviceFile())) {
+                        mLogger->logmsg(LOGLEVEL_INFO,
+                                "Device %s in device filter",
+                                descr.GetDeviceFile().c_str());
+                    } else {
+#ifdef DEBUG
+                        mLogger->logmsg(LOGLEVEL_INFO,
+                                "  ******** Detect ********");
+#endif
+                        // Detect media and return keylist if detection was
+                        // successful
+                        if (DoDetect(descr, description, keylist)) {
+                            mediainfo = descr;
+                            return (keylist);
+                        }
+                    }
                 } catch (cDeviceKitException &e) {
                     mLogger->logmsg(LOGLEVEL_WARNING, "DeviceKit Error %s",
                             e.what());
                 }
 
-                if (InDeviceFilter(descr.GetDeviceFile())) {
-                    mLogger->logmsg(LOGLEVEL_INFO, "Device %s in device filter",
-                            descr.GetDeviceFile().c_str());
-                } else {
-#ifdef DEBUG
-                    mLogger->logmsg(LOGLEVEL_INFO, "  ******** Detect ********");
-#endif
-                    // Detect media and return keylist if detection was
-                    // successful
-                    if (DoDetect(descr, description, keylist)) {
-                        mediainfo = descr;
-                        return (keylist);
-                    }
-                }
             }
         }
         else { // Start manual scan

@@ -19,7 +19,7 @@
 typedef struct _autostart_service {
     std::string mDescription;
     std::string mMountPath;
-    stringVector mKeyList;
+    stringList mKeyList;
     cMediaHandle mMediaDescr;
     bool mSendToOwn;
 } AutoStartService;
