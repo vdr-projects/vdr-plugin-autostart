@@ -13,18 +13,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string>
-#include <list>
-#include <map>
-#include <queue>
-#include <algorithm>
 
 #include "logger.h"
-
-typedef std::queue<std::string> stringQueue;
-typedef std::list<std::string> stringList;
-typedef std::map<std::string, stringList> Key;
-typedef std::map<std::string, Key> Section;
+#include "stdtypes.h"
 
 class cConfigFileParser {
 private:

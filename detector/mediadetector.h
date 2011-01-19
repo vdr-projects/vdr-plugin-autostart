@@ -17,6 +17,7 @@
 #include "cdiotester.h"
 #include "videodvdtester.h"
 #include "logger.h"
+#include "stdtypes.h"
 
 
 class cMediaDetector {

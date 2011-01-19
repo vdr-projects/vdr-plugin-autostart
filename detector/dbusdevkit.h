@@ -18,6 +18,7 @@
 #include <exception>
 #include <stdio.h>
 #include "logger.h"
+#include "stdtypes.h"
 
 #define DEVKITEXCEPTION(t) throw cDeviceKitException(__FILE__, __LINE__,(t))
 
@@ -39,7 +40,6 @@ public:
 
 class cDbusDevkit {
 public:
-    typedef std::list<std::string> StringList;
     typedef enum {
         DeviceAdded,
         DeviceRemoved,
@@ -52,6 +52,7 @@ public:
     bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
 
     std::string FindDeviceByDeviceFile (const std::string device);
+    stringList EnumerateDevices (void);
     // Do automount and return mount path
     std::string AutoMount(const std::string path)
                                 throw (cDeviceKitException);
@@ -76,7 +77,7 @@ public:
         const std::string name = "device-file";
         return GetDbusPropertyS (path, name);
     }
-    StringList GetMountPaths (const std::string &path)
+    stringList GetMountPaths (const std::string &path)
                                  throw (cDeviceKitException) {
         const std::string name = "DeviceMountPaths";
         return GetDbusPropertyAS (path, name);
@@ -128,7 +129,7 @@ public:
                                     const std::string &name)
                                     throw (cDeviceKitException);
     // Property as (String Array)
-    StringList GetDbusPropertyAS (const std::string &path,
+    stringList GetDbusPropertyAS (const std::string &path,
                                      const std::string &name)
                                      throw (cDeviceKitException);
     // Property u

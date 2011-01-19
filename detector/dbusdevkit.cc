@@ -224,6 +224,77 @@ string cDbusDevkit::FindDeviceByDeviceFile (const string device)
     return retval;
 }
 
+stringList cDbusDevkit::EnumerateDevices (void)
+{
+    DBusMessage *msg = NULL;
+    DBusMessage *getmsg = NULL;
+    DBusMessageIter iter;
+    DBusMessageIter subiter;
+    stringList retval;
+    char *val;
+
+    WaitConn();
+
+    getmsg = dbus_message_new_method_call(mService,   // target for the method call
+                                       mObjectPath,       // object to call on
+                                       mService,          // interface to call on
+                                       "EnumerateDevices");   // method name
+    if (getmsg == NULL) {
+        DEVKITEXCEPTION("dbus_message_new_method_call Message Null");
+    }
+
+    try {
+        // send message and get a handle for a reply
+        msg = dbus_connection_send_with_reply_and_block(mConnSystem, getmsg,
+                                                              -1, &mErr);
+        if (dbus_error_is_set(&mErr)) {
+            string errmsg = "dbus_connection_send_with_reply failed";
+            errmsg += mErr.message;
+            dbus_error_free(&mErr);
+            DEVKITEXCEPTION(errmsg);
+        }
+
+        // read the parameters
+        if (!dbus_message_iter_init(msg, &iter)) {
+            DEVKITEXCEPTION("Message has no arguments!");
+        }
+
+        int msgtype = dbus_message_iter_get_arg_type(&iter);
+        if (msgtype != DBUS_TYPE_ARRAY) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not array %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not a array");
+        }
+
+        dbus_message_iter_recurse(&iter, &subiter);
+        msgtype = dbus_message_iter_get_arg_type(&subiter);
+        if (msgtype != DBUS_TYPE_OBJECT_PATH) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Argument is not object path %c!",
+                    msgtype);
+            DEVKITEXCEPTION("Argument is not object path");
+        }
+
+        do {
+            dbus_message_iter_get_basic(&subiter, &val);
+            retval.push_back(val);
+        } while (dbus_message_iter_next(&subiter));
+        // free message
+        dbus_message_unref(getmsg);
+        // free reply and close connection
+        dbus_message_unref(msg);
+    } catch (cDeviceKitException &e) {
+        if (getmsg != NULL) {
+            dbus_message_unref(getmsg);
+        }
+        if (msg != NULL) {
+            dbus_message_unref(msg);
+        }
+        throw;
+    }
+    return retval;
+}
+
+
 DBusMessage *cDbusDevkit::CallDbusProperty (const string &path,
                                                 const string &name,
                                                 DBusMessageIter *iter)
@@ -308,14 +379,14 @@ string cDbusDevkit::GetDbusPropertyS (const string &path,
     return retval;
 }
 
-cDbusDevkit::StringList cDbusDevkit::GetDbusPropertyAS (const string &path,
-                                                const string &name)
-                                                throw (cDeviceKitException)
+stringList cDbusDevkit::GetDbusPropertyAS (const string &path,
+                                               const string &name)
+                                               throw (cDeviceKitException)
 {
     DBusMessage *msg = NULL;
     DBusMessageIter iter;
     DBusMessageIter subiter;
-    StringList retval;
+    stringList retval;
     string s;
     char *val;
 

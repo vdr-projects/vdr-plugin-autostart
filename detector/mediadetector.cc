@@ -108,6 +108,15 @@ bool cMediaDetector::AddGlobalOptions (const string sectionname)
         }
     }
 
+    vals = mDevkit.EnumerateDevices();
+    for (it = vals.begin(); it != vals.end(); it++) {
+        dev = *it;
+        string native_path = mDevkit.GetNativePath(dev);
+        if (!mDevkit.IsPartition(dev) && (!InDeviceFilter(native_path))) {
+            mLogger->logmsg(LOGLEVEL_INFO, "Enumerate dev %s", dev.c_str());
+            mScanDevices.insert(dev);
+        }
+    }
     return true;
 }
 
@@ -121,10 +130,10 @@ bool cMediaDetector::InitDetector(cLogger *logger,
 
     mLogger = logger;
     // Initialize known media testers
-cCdioTester *t = new cCdioTester(logger, "Audio CD", "CD");
-mRegisteredMediaTesters.clear();
-mMediaTesters.clear();
-    mMediaTesters.push_back(t);
+
+    mRegisteredMediaTesters.clear();
+    mMediaTesters.clear();
+    mMediaTesters.push_back(new cCdioTester(logger, "Audio CD", "CD"));
     mMediaTesters.push_back(new cVideoDVDTester(logger, "Video DVD", "DVD"));
     mMediaTesters.push_back(new cFileDetector(logger, "Files", "FILE"));
 
