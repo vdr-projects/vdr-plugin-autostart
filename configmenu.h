@@ -16,24 +16,30 @@
 #include <vdr/plugin.h>
 #include "detector/mediadetector.h"
 #include "autostart.h"
+#include "mediadetectorthread.h"
 
 class cConfigMenu: public cMenuSetupPage {
+    friend class cPluginAutostart;
+private:
+    static int mWorkingMode;
+    static int mShowMainMenu;
+    static const char *WORKINGMODE;
+    static const char *ENABLEMAINMENU;
+    static cMediaDetectorThread *mDetector;
+
+    cConfigMenu(void) {};
+
+protected:
+    virtual void Store(void);
+
 public:
-    cConfigMenu(void);
+
+    cConfigMenu(cMediaDetectorThread *detector);
     static const cMediaDetector::WORKING_MODE GetWorkingMode(void) {
         return (cMediaDetector::WORKING_MODE)mWorkingMode;
     }
     static const bool GetShowMainMenu(void) { return mShowMainMenu; }
     static const bool SetupParse(const char *Name, const char *Value);
-
-    static const char *WORKINGMODE;
-    static const char *ENABLEMAINMENU;
-private:
-    static int mWorkingMode;
-    static int mShowMainMenu;
-
-protected:
-    virtual void Store(void);
 };
 
 #endif /* CONFIGMENU_H_ */

@@ -21,9 +21,11 @@ const char *cConfigMenu::WORKINGMODE = "Mode";
 const char *cConfigMenu::ENABLEMAINMENU = "EnableMainMenu";
 int cConfigMenu::mShowMainMenu = true;
 int cConfigMenu::mWorkingMode = cMediaDetector::AUTO_START;
+cMediaDetectorThread *cConfigMenu::mDetector = NULL;
 
-cConfigMenu::cConfigMenu(void) : cMenuSetupPage()
+cConfigMenu::cConfigMenu(cMediaDetectorThread *detector) : cMenuSetupPage()
 {
+    mDetector = detector;
     SetSection (tr("Autostart"));
 
     Add(new cMenuEditStraItem(tr("Mode"), &mWorkingMode,
@@ -35,8 +37,10 @@ const bool cConfigMenu::SetupParse(const char *Name, const char *Value)
 {
   // Parse setup parameters and store their values.
   if (strcasecmp(Name, WORKINGMODE) == 0) {
-printf("WorkingMode %s\n",Value);
-      mShowMainMenu = atoi(Value);
+      mWorkingMode = atoi(Value);
+      if (mDetector != NULL) {
+          mDetector->SetWorkingMode((cMediaDetector::WORKING_MODE)mWorkingMode);
+      }
   }
   else if (strcasecmp(Name, ENABLEMAINMENU) == 0) {
       mShowMainMenu = atoi(Value);
@@ -49,7 +53,9 @@ printf("WorkingMode %s\n",Value);
 
 void cConfigMenu::Store(void)
 {
-printf("Store\n");
     SetupStore(WORKINGMODE, mWorkingMode);
     SetupStore(ENABLEMAINMENU, (int)mShowMainMenu);
+    if (mDetector != NULL) {
+        mDetector->SetWorkingMode((cMediaDetector::WORKING_MODE)mWorkingMode);
+    }
 }

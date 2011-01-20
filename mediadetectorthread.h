@@ -37,7 +37,6 @@ public:
         Cancel(5);
     }
     void SetWorkingMode (cMediaDetector::WORKING_MODE mode) {
-printf("Set working Mode %d\n", mode);
         mDetector.SetWorkingMode(mode);
     }
     void StartManualScan (void) { mDetector.StartManualScan(); }

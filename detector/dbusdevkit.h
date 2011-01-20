@@ -62,47 +62,35 @@ public:
     }
     std::string GetNativePath (const std::string &path)
                                  throw (cDeviceKitException) {
-        const std::string name = "native-path";
-        return GetDbusPropertyS (path, name);
+        return GetDbusPropertyS (path, "native-path");
     }
-
     std::string GetType (const std::string &path)
                           throw (cDeviceKitException) {
-        const std::string name = "id-type";
-        return GetDbusPropertyS (path, name);
+        return GetDbusPropertyS (path, "id-type");
     }
-
     std::string GetDeviceFile (const std::string &path)
                                  throw (cDeviceKitException) {
-        const std::string name = "device-file";
-        return GetDbusPropertyS (path, name);
+        return GetDbusPropertyS (path, "device-file");
     }
     stringList GetMountPaths (const std::string &path)
                                  throw (cDeviceKitException) {
-        const std::string name = "DeviceMountPaths";
-        return GetDbusPropertyAS (path, name);
+        return GetDbusPropertyAS (path, "DeviceMountPaths");
     }
-
     bool IsMounted(const std::string &path)
                      throw (cDeviceKitException){
-        const std::string name = "device-is-mounted";
-        return GetDbusPropertyB (path, name);
+        return GetDbusPropertyB (path, "device-is-mounted");
     }
-
     bool IsOpticalDisk(const std::string &path)
                          throw (cDeviceKitException) {
-        const std::string name = "device-is-optical-disc";
-        return GetDbusPropertyB (path, name);
+        return GetDbusPropertyB (path, "device-is-optical-disc");
     }
     bool IsPartition(const std::string &path)
                        throw (cDeviceKitException) {
-        const std::string name = "device-is-partition";
-        return GetDbusPropertyB (path, name);
+        return GetDbusPropertyB (path, "device-is-partition");
     }
     bool IsMediaAvailable(const std::string &path)
                              throw (cDeviceKitException) {
-        const std::string name = "device-is-media-available";
-        return GetDbusPropertyB (path, name);
+        return GetDbusPropertyB (path, "device-is-media-available");
     }
   private:
     DBusConnection *mConnSystem;

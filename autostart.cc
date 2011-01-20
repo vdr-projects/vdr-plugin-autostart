@@ -63,21 +63,19 @@ bool cPluginAutostart::ProcessArgs(int argc, char *argv[])
 
 bool cPluginAutostart::Initialize(void)
 {
-    dsyslog("Initialize");
     mDetector.SetDescription ("MediaDetector");
     return mDetector.InitDetector(GetConfigFile(), Name());
 }
 
 bool cPluginAutostart::Start(void)
 {
-    dsyslog("Start");
     mDetector.Start();
+    mDetector.SetWorkingMode(cConfigMenu::GetWorkingMode());
     return true;
 }
 
 void cPluginAutostart::Stop(void)
 {
-    dsyslog("Stop");
     mDetector.Stop();
 }
 
@@ -104,17 +102,13 @@ cOsdObject *cPluginAutostart::MainMenuAction(void)
 cMenuSetupPage *cPluginAutostart::SetupMenu(void)
 {
   // Return the setup menu
-  return new cConfigMenu();
+  return new cConfigMenu(&mDetector);
 }
 
 bool cPluginAutostart::SetupParse(const char *Name, const char *Value)
 {
   // Parse setup parameters and store their values.
   bool ret = cConfigMenu::SetupParse(Name, Value);
-  if (Name == cConfigMenu::ENABLEMAINMENU) {
-printf("SetupParse Name %s %s\n",Name, Value);
-      mDetector.SetWorkingMode(cConfigMenu::GetWorkingMode());
-  }
   return ret;
 }
 
