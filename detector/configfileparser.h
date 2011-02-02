@@ -35,12 +35,16 @@ private:
 public:
     cConfigFileParser(cLogger *l) {mLogger = l;}
     bool Parse (const std::string filename);
+    bool GetKeys (const std::string sectionname, stringList &values);
     bool GetFirstSection (Section::iterator &iter, std::string &sectionname);
     bool GetNextSection (Section::iterator &iter, std::string &sectionname);
     bool GetValues (const std::string sectionname, const std::string key,
                       stringList &values);
     bool GetSingleValue (const std::string sectionname, const std::string key,
                            std::string &values);
+    bool CheckSection (const std::string sectionname,
+                         const stringSet required,
+                         const stringSet optional);
 };
 
 #endif /* CONFIGFILEPARSER_H_ */

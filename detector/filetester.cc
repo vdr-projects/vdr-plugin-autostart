@@ -15,16 +15,16 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "filedetector.h"
+#include "filetester.h"
 
 using namespace std;
 
-cFileDetector::stringSet cFileDetector::mDetectedSuffixCache;
-cFileDetector::DevMap cFileDetector::mDeviceMap;
-string cFileDetector::mLinkPath;
-bool cFileDetector::mAutoMount = true;
+cFileTester::stringSet cFileTester::mDetectedSuffixCache;
+cFileTester::DevMap cFileTester::mDeviceMap;
+string cFileTester::mLinkPath;
+bool cFileTester::mAutoMount = true;
 
-bool cFileDetector::RmLink(const string ln)
+bool cFileTester::RmLink(const string ln)
 {
     struct stat s;
     const char *to = ln.c_str();
@@ -33,7 +33,7 @@ bool cFileDetector::RmLink(const string ln)
         if (errno != ENOENT) {
             string err = strerror(errno);
             mLogger->logmsg(LOGLEVEL_ERROR, "Error removing %s: %s",
-                    to, strerror(errno));
+                            to, strerror(errno));
             return false;
         }
     }
@@ -54,7 +54,7 @@ bool cFileDetector::RmLink(const string ln)
     return true;
 }
 
-void cFileDetector::Link(const string ln)
+void cFileTester::Link(const string ln)
 {
     const char *from = ln.c_str();
     const char *to = mLinkPath.c_str();
@@ -65,18 +65,18 @@ void cFileDetector::Link(const string ln)
     if (symlink(from, to) != 0) {
         string err = strerror(errno);
         mLogger->logmsg(LOGLEVEL_ERROR, "Can not link from %s to %s: %s", from,
-                to, strerror(errno));
+                        to, strerror(errno));
     }
 }
 
-bool cFileDetector::FindSuffix (const string str) {
+bool cFileTester::FindSuffix (const string str) {
     if (mSuffix.find(str) == mSuffix.end()) {
         return (false);
     }
     return (true);
 }
 
-string cFileDetector::GetSuffix (const string str) {
+string cFileTester::GetSuffix (const string str) {
     size_t pos = 0;
     pos = str.find_last_of('.');
 
@@ -87,7 +87,7 @@ string cFileDetector::GetSuffix (const string str) {
     return str.substr(pos+1);
 }
 
-void cFileDetector::BuildSuffixCache (string path) {
+void cFileTester::BuildSuffixCache (string path) {
     DIR *dp;
     struct dirent *ep;
     struct stat st;
@@ -125,7 +125,7 @@ void cFileDetector::BuildSuffixCache (string path) {
     (void)closedir(dp);
 }
 
-bool cFileDetector::isMedia (cMediaHandle d, stringList &keylist)
+bool cFileTester::isMedia (cMediaHandle d, stringList &keylist)
 {
     bool found = false;
     string mountpath;
@@ -151,8 +151,8 @@ bool cFileDetector::isMedia (cMediaHandle d, stringList &keylist)
     return found;
 }
 
-bool cFileDetector::loadConfig (cConfigFileParser config,
-                                    const string sectionname)
+bool cFileTester::loadConfig (cConfigFileParser config,
+                                  const string sectionname)
 {
     if (!cMediaTester::loadConfig(config, sectionname)) {
         return false;
@@ -194,7 +194,7 @@ bool cFileDetector::loadConfig (cConfigFileParser config,
     return true;
 }
 
-void cFileDetector::startScan (cMediaHandle &d)
+void cFileTester::startScan (cMediaHandle &d)
 {
     MEDIA_MASK_T m = d.GetMediaMask();
     string dev = d.GetDeviceFile();
@@ -220,7 +220,7 @@ void cFileDetector::startScan (cMediaHandle &d)
     BuildSuffixCache(d.GetMountPath());
 }
 
-void cFileDetector::endScan (cMediaHandle &d)
+void cFileTester::endScan (cMediaHandle &d)
 {
     string dev = d.GetDeviceFile();
     if (inDeviceSet(dev)) {
@@ -241,7 +241,7 @@ void cFileDetector::endScan (cMediaHandle &d)
     mDeviceMap[dev] = devinfo;
 }
 
-void cFileDetector::removeDevice (cMediaHandle d)
+void cFileTester::removeDevice (cMediaHandle d)
 {
     string path = d.GetPath();
     mLogger->logmsg(LOGLEVEL_INFO, "Removing %s", path.c_str());

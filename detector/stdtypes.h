@@ -15,9 +15,11 @@
 #include <map>
 #include <queue>
 #include <algorithm>
+#include <set>
 
 typedef std::queue<std::string> stringQueue;
 typedef std::list<std::string> stringList;
+typedef std::set<std::string> stringSet;
 typedef std::map<std::string, stringList> Key;
 typedef std::map<std::string, Key> Section;
 

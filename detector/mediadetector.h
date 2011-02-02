@@ -13,7 +13,7 @@
 #define MEDIADETECTOR_H_
 
 #include "configfileparser.h"
-#include "filedetector.h"
+#include "filetester.h"
 #include "cdiotester.h"
 #include "videodvdtester.h"
 #include "logger.h"

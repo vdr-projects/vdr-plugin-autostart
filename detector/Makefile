@@ -1,7 +1,7 @@
 include ../Makefile.inc
 
 OBJS = cdiotester.o configfileparser.o dbusdevkit.o \
-		filedetector.o mediadetector.o mediatester.o \
+		filetester.o mediadetector.o mediatester.o \
 		videodvdtester.o
 HEADER = $(OBJS:%.o=%.h) logger.h stringtools.h
 

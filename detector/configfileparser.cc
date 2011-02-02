@@ -180,7 +180,7 @@ bool cConfigFileParser::Parse(const string fname)
     return true;
 }
 
-// Find a key in a given section and return the values as Value List.
+// Find a key in a given section and return the values as list.
 // Returns true if the key was found.
 bool cConfigFileParser::GetValues (const string sectionname,
                                        const string key,
@@ -209,6 +209,32 @@ bool cConfigFileParser::GetValues (const string sectionname,
     return true;
 }
 
+// Return all keys in a given section and return the values as list.
+// Returns true if the section was found.
+bool cConfigFileParser::GetKeys (const string sectionname,
+                                     stringList &values)
+{
+    Section::iterator seciter;
+    Key::iterator keyiter;
+    Key kl;
+
+    string section = StringTools::ToUpper(sectionname);
+
+    values.clear();
+    seciter = mSections.find(section);
+    if (seciter == mSections.end()) {
+        string err = "Can not find section " + section;
+        mLogger->logmsg(LOGLEVEL_ERROR,err.c_str());
+        return false;
+    }
+    values.clear();
+    kl = seciter->second;
+    for (keyiter = kl.begin(); keyiter != kl.end(); keyiter++) {
+        values.push_back(keyiter->first);
+    }
+
+    return true;
+}
 // Return a a key in a given section as single value (not split into a key list)
 
 bool cConfigFileParser::GetSingleValue (const string sectionname,
@@ -257,3 +283,53 @@ bool cConfigFileParser::GetNextSection (Section::iterator &iter,
     return true;
 }
 
+// Helper function to validate that a section contains only required and
+// optional keywords and that all required keywords are present.
+
+bool cConfigFileParser::CheckSection (const string sectionname,
+                                           const stringSet required,
+                                           const stringSet optional)
+{
+    stringList::iterator it;
+    stringList keys;
+
+    map <string,bool> reqmap;
+    map <string,bool>::iterator reqit;
+
+// Check that required keywords are available
+    stringSet::iterator req;
+    for (req = required.begin(); req != required.end(); req++) {
+        string s = *req;
+        reqmap[s] = false;
+    }
+    // Check for required and optional keywords.
+    if (!GetKeys(sectionname, keys)) {
+        mLogger->logmsg(LOGLEVEL_ERROR, "Invalid section %s", sectionname.c_str());
+        return false;
+    }
+
+    for (it = keys.begin(); it != keys.end(); it++) {
+        string s = *it;
+        bool inreq = (reqmap.find(s) != reqmap.end());
+        bool inopt = (optional.find(s) != optional.end());
+        if ((!inreq) && (!inopt)) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "Invalid keyword %s in section %s",
+                            s.c_str(),
+                            sectionname.c_str());
+            return false;
+        }
+        if (inreq) {
+            reqmap[s] = true;
+        }
+    }
+
+    for (reqit = reqmap.begin(); reqit != reqmap.end(); reqit++) {
+        if (!reqit->second) {
+             mLogger->logmsg(LOGLEVEL_ERROR, "Required keyword %s missing in section %s",
+                            reqit->first.c_str(),
+                            sectionname.c_str());
+            return false;
+        }
+    }
+    return true;
+}

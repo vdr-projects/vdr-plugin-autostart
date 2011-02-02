@@ -19,27 +19,9 @@
 #include "stringtools.h"
 
 
-class cFileDetector : public cMediaTester {
-public:
-    cFileDetector(cLogger *l, std::string descr, std::string ext) {
-        mLogger = l;
-        mDescription = descr;
-        mExt = ext;
-        mConfiguredAutoMount = true;
-    }
-
-    bool isMedia (const cMediaHandle d, stringList &keylist);
-    cMediaTester *create(cLogger *l) const {
-        return new cFileDetector(l, mDescription, mExt);
-    }
-    bool loadConfig (cConfigFileParser config,
-                       const std::string sectionname);
-    void startScan (cMediaHandle &d);
-    void endScan (cMediaHandle &d);
-    void removeDevice (cMediaHandle d);
-
+class cFileTester : public cMediaTester
+{
 private:
-    cFileDetector() {};
     typedef struct {
         std::string devPath;
         std::string linkPath;
@@ -67,6 +49,25 @@ private:
     }
     bool RmLink(const std::string ln);
     void Link(const std::string ln);
+
+public:
+    cFileTester(cLogger *l, std::string descr, std::string ext) :
+                    cMediaTester (l, descr, ext) {
+        mConfiguredAutoMount = true;
+        mRequiredKeys.insert("FILES");
+        mOptionalKeys.insert("LINKPATH");
+        mOptionalKeys.insert("AUTOMOUNT");
+    }
+
+    bool isMedia (const cMediaHandle d, stringList &keylist);
+    cMediaTester *create(cLogger *l) const {
+        return new cFileTester(l, mDescription, mExt);
+    }
+    bool loadConfig (cConfigFileParser config,
+                       const std::string sectionname);
+    void startScan (cMediaHandle &d);
+    void endScan (cMediaHandle &d);
+    void removeDevice (cMediaHandle d);
 };
 
 #endif /* FILEDETECTOR_H_ */

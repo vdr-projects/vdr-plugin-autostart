@@ -88,6 +88,7 @@ bool cMediaDetector::AddGlobalOptions (const string sectionname)
             mFilterDevices.insert(dev);
         }
     }
+/*
     if (mConfigFileParser.GetValues(sectionname, "SCANDEV", vals)) {
         for (it = vals.begin(); it != vals.end(); it++) {
             dev = *it;
@@ -107,7 +108,7 @@ bool cMediaDetector::AddGlobalOptions (const string sectionname)
 #endif
         }
     }
-
+*/
     vals = mDevkit.EnumerateDevices();
     for (it = vals.begin(); it != vals.end(); it++) {
         dev = *it;
@@ -135,7 +136,7 @@ bool cMediaDetector::InitDetector(cLogger *logger,
     mMediaTesters.clear();
     mMediaTesters.push_back(new cCdioTester(logger, "Audio CD", "CD"));
     mMediaTesters.push_back(new cVideoDVDTester(logger, "Video DVD", "DVD"));
-    mMediaTesters.push_back(new cFileDetector(logger, "Files", "FILE"));
+    mMediaTesters.push_back(new cFileTester(logger, "Files", "FILE"));
 
     if (!mConfigFileParser.Parse(initfile)) {
         return false;

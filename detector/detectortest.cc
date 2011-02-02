@@ -36,7 +36,9 @@ int main(int argc, const char* argv[])
     cMediaHandle ha;
     int i;
 
-    detector.InitDetector(&log, "/tmp/test.conf");
+    if (!detector.InitDetector(&log, "/tmp/test.conf")) {
+        exit(-1);
+    }
     for (i=0; i < 3; i++) {
         vl = detector.Detect(descr, ha);
         log.logmsg(LOGLEVEL_ERROR, "\n%s Keylist : ", descr.c_str());

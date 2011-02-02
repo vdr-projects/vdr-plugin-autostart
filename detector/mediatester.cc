@@ -87,7 +87,7 @@ void cMediaHandle::Umount(void)
     mMountPath.clear();
 }
 
-stringList cMediaTester::getList (cConfigFileParser config,
+stringList cMediaTester::getList(cConfigFileParser config,
                                     const string sectionname,
                                     const string key)
 {
@@ -108,6 +108,9 @@ stringList cMediaTester::getList (cConfigFileParser config,
 bool cMediaTester::loadConfig (cConfigFileParser config,
                                    const string sectionname)
 {
+    if (!config.CheckSection (sectionname, mRequiredKeys, mOptionalKeys)) {
+        return false;
+    }
     // Each media tester must read in at least the KEYS keyword.
     mKeylist = getList (config, sectionname, "KEYS");
     if (mKeylist.empty() ) {

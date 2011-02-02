@@ -57,6 +57,9 @@ public:
     bool isAutoMounted (void) {return (!mMountPath.empty());}
 };
 
+// Base class for all testers.
+// A new tester must be derived from this class
+
 class cMediaTester
 {
 protected:
@@ -64,21 +67,43 @@ protected:
     stringList mKeylist;
     std::string mDescription;
     std::string mExt;
+    stringSet mRequiredKeys;
+    stringSet mOptionalKeys;
+
+    stringList getList (cConfigFileParser config,
+                         const std::string sectionname,
+                         const std::string key);
 
 public:
+    cMediaTester(cLogger *l, std::string descr, std::string ext) {
+        mLogger = l;
+        mDescription = descr;
+        mExt = ext;
+        // Minimal required keywords for all media testers.
+        mRequiredKeys.insert("KEYS");
+        mRequiredKeys.insert("TYPE");
+    }
+    virtual ~cMediaTester() {};
+
+    // Return true if the tester matches TYPE keyword
+    bool typeMatches (const std::string name);
+    // Virtual function for loading a config file. This implementation
+    // Parses only the KEY keyword.
     virtual bool loadConfig (cConfigFileParser config,
                                 const std::string sectionname);
+    // Return true if inserted media is suitable for testing
     virtual bool isMedia (cMediaHandle d, stringList &keylist) = 0;
+    // Create a new instance copying mDescription and mExt and set
+    // logger.
     virtual cMediaTester *create(cLogger *) const = 0;
+    // Hook called before a scan starts
     virtual void startScan (cMediaHandle &d) {};
+    // Hook called when scan ends
     virtual void endScan (cMediaHandle &d) {};
+    // Hook called when the device is removed
     virtual void removeDevice (cMediaHandle d) {};
-    virtual stringList getList (cConfigFileParser config,
-                                const std::string sectionname,
-                                const std::string key);
-    virtual bool typeMatches (const std::string name);
-    virtual std::string GetDescription(void) {return mDescription;}
-    virtual ~cMediaTester() {};
+    // Return a description for the tester
+    std::string GetDescription(void) {return mDescription;}
 };
 
 #endif /* MEDIATESTER_H_ */
