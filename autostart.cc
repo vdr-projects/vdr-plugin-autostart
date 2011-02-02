@@ -170,14 +170,20 @@ void cSenderThread::Action(void)
 
 const char **cPluginAutostart::SVDRPHelpPages(void)
 {
-  // Return help text for SVDRP commands this plugin implements
-  return NULL;
+  static const char *HelpPages[] = {
+            "DETECT:  Detect and play\n",
+            NULL
+    };
+    return HelpPages;
 }
 
 cString cPluginAutostart::SVDRPCommand(const char *Command, const char *Option, int &ReplyCode)
 {
-  // Process SVDRP commands this plugin implements
-  return NULL;
+    if (strcasecmp(Command, "DETECT") == 0) {
+        cRemote::CallPlugin(Name());
+        return "OK";
+    }
+    return NULL;
 }
 
 VDRPLUGINCREATOR(cPluginAutostart); // Don't touch this!
