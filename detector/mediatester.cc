@@ -8,6 +8,11 @@
  */
 
 #include "mediatester.h"
+#ifndef _NOVDR_
+#include <vdr/plugin.h>
+#else
+#include "vdrsimulator.h"
+#endif
 
 using namespace std;
 
@@ -113,9 +118,31 @@ bool cMediaTester::loadConfig (cConfigFileParser config,
     }
     // Each media tester must read in at least the KEYS keyword.
     mKeylist = getList (config, sectionname, "KEYS");
-    if (mKeylist.empty() ) {
+    if (mKeylist.empty()) {
         mLogger->logmsg(LOGLEVEL_ERROR, "No KEYS defined\n");
         return false;
+    }
+    stringList::iterator it;
+    // Check input string
+    for (it = mKeylist.begin(); it != mKeylist.end(); it++) {
+        string key = *it;
+        mLogger->logmsg(LOGLEVEL_INFO, "Check key %s", key.c_str());
+        if (key[0] == '@') {
+            // Plugin
+            key.erase(0,1);
+            cPlugin *p = cPluginManager::GetPlugin(key.c_str());
+            if (p == NULL) {
+                mLogger->logmsg(LOGLEVEL_ERROR, "Plugin %s not available", key.c_str());
+                return false;
+            }
+        }
+        else {
+            eKeys keycode = cKey::FromString(key.c_str());
+            if (keycode == kNone) {
+                mLogger->logmsg(LOGLEVEL_ERROR, "Unkown key %s", key.c_str());
+                return false;
+            }
+        }
     }
     return true;
 }

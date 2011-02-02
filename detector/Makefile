@@ -8,15 +8,20 @@ HEADER = $(OBJS:%.o=%.h) logger.h stringtools.h
 OBJLIBS = ../detector.a 
 
 TESTOBJS = detectortest.o
+INCLUDES += -I$(VDRDIR)/../include
 
 -include $(DEPFILE)
 
+
+
+.PHONY: all 
 all: $(OBJLIBS)
 
 $(OBJLIBS): $(OBJS) $(HEADER)
 	@echo $(AR) $(ARFLAGS) $@ $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
-	
+
+.PHONY: clean
 clean:
 	@-rm -f $(OBJS) $(TESTOBJS)
 	@-rm -f $(OBJLIBS)
@@ -36,10 +41,10 @@ $(DEPFILE): Makefile
 	@$(MAKEDEP) $(DEFINES) $(INCLUDES) $(OBJS:%.o=%.cc) $(TESTOBJS:%.o=%.cc) $(HEADER)> $@
 
 ### Build test programm
+
+.PHONY: test
+test: CXXFLAGS += -D_NOVDR_
 test: $(TESTOBJS) $(OBJLIBS) $(OBJS) $(HEADER)
 	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) $(OBJLIBS) -o detectortest
 	
-force_look :
-	true
 
-	

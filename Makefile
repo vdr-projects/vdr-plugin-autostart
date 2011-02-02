@@ -78,6 +78,7 @@ CXXFLAGS += $(shell pkg-config --cflags dvdread)
 
 ### The main target:
 
+.PHONY: all
 all: libvdr-$(PLUGIN).so i18n
 
 ### Implicit rules:
@@ -121,7 +122,7 @@ i18n: $(I18Nmsgs) $(I18Npot)
 
 ### Targets:
 
-detector.a: force_look
+detector.a:
 	@cd detector; $(MAKE)
 	
 
@@ -137,10 +138,9 @@ dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
 	@echo Distribution package created as $(PACKAGE).tgz
 
+.PHONY: clean
 clean:
 	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot 
 	@cd detector; $(MAKE) clean
 	
-force_look :
-	true
-	
+
