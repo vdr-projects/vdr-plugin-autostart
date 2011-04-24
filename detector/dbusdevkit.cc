@@ -483,7 +483,8 @@ bool cDbusDevkit::GetDbusPropertyB (const string &path,
 string cDbusDevkit::AutoMount(const string path)
     throw (cDeviceKitException)
 {
-    DBusMessage *msg, *getmsg;
+    DBusMessage *msg = NULL;
+    DBusMessage *getmsg = NULL;
     const char *fs_type = "";
     const char *opts[] = {NULL};
     char *val;

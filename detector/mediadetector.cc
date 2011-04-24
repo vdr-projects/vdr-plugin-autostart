@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include "mediadetector.h"
 #include <assert.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -70,12 +73,46 @@ bool cMediaDetector::AddDetector (const string section)
     return found;
 }
 
+void cMediaDetector::ParseFstab (stringList &values)
+{
+    ifstream file;
+    string line;
+    const static string fstab = "/etc/fstab";
+
+    file.open(fstab.c_str());
+    if (!file.is_open()) {
+        string err = "Can not open file " + fstab;
+        mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
+        return;
+    }
+
+    while (getline (file, line)) {
+        istringstream buffer(line);
+        string device;
+        string mountpoint;
+        string options;
+        string fs;
+        buffer >> device;
+        buffer >> mountpoint;
+        buffer >> fs;
+        buffer >> options;
+        if (options.find("noauto") == string::npos) {
+            values.push_back(device);
+        }
+    }
+    if (!file.eof()) {
+        string err = "Read error on file " + fstab;
+        mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
+    }
+}
+
 // Read global options for the plugin
 bool cMediaDetector::AddGlobalOptions (const string sectionname)
 {
     stringList vals;
     stringList::iterator it;
     string dev;
+    bool autokeyword = false;
 
     if (sectionname != "GLOBAL") {
         return false;
@@ -84,40 +121,25 @@ bool cMediaDetector::AddGlobalOptions (const string sectionname)
     if (mConfigFileParser.GetValues(sectionname, "FILTERDEV", vals)) {
         for (it = vals.begin(); it != vals.end(); it++) {
             dev = *it;
+            if (StringTools::ToUpper(dev) == "AUTO") {
+                autokeyword = true;
+            }
+            else {
+                mFilterDevices.insert(dev);
+            }
             mLogger->logmsg(LOGLEVEL_INFO, "Filter dev %s", dev.c_str());
-            mFilterDevices.insert(dev);
         }
     }
-/*
-    if (mConfigFileParser.GetValues(sectionname, "SCANDEV", vals)) {
+    if (autokeyword) {
+        vals.clear();
+        ParseFstab (vals);
         for (it = vals.begin(); it != vals.end(); it++) {
             dev = *it;
-            if (dev[0] != '/') {
-                dev = "/dev/" + dev;
-            }
-            mLogger->logmsg(LOGLEVEL_INFO, "Scan dev %s", dev.c_str());
-            mScanDevices.insert(dev);
+            mAutoFilterDevices.insert(dev);
+            mLogger->logmsg(LOGLEVEL_INFO, "Auto Filter dev %s", dev.c_str());
+        }
+    }
 
-#ifdef DEBUG
-            try {
-                mLogger->logmsg(LOGLEVEL_INFO, "Path : %s",
-                        mDevkit.FindDeviceByDeviceFile(dev).c_str());
-            } catch (cDeviceKitException &e) {
-                mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
-            }
-#endif
-        }
-    }
-*/
-    vals = mDevkit.EnumerateDevices();
-    for (it = vals.begin(); it != vals.end(); it++) {
-        dev = *it;
-        string native_path = mDevkit.GetNativePath(dev);
-        if (!mDevkit.IsPartition(dev) && (!InDeviceFilter(native_path))) {
-            mLogger->logmsg(LOGLEVEL_INFO, "Enumerate dev %s", dev.c_str());
-            mScanDevices.insert(dev);
-        }
-    }
     return true;
 }
 
@@ -128,6 +150,8 @@ bool cMediaDetector::InitDetector(cLogger *logger,
 {
     Section::iterator iter;
     string sectionname;
+    stringList vals;
+    stringList::iterator it;
 
     mLogger = logger;
     // Initialize known media testers
@@ -160,16 +184,44 @@ bool cMediaDetector::InitDetector(cLogger *logger,
             }
         }
     }
+
+    vals = mDevkit.EnumerateDevices();
+    for (it = vals.begin(); it != vals.end(); it++) {
+        string dev = *it;
+        if (!mDevkit.IsPartition(dev) && (!InDeviceFilter(dev))) {
+            mLogger->logmsg(LOGLEVEL_INFO, "Enumerate dev %s", dev.c_str());
+            mScanDevices.insert(dev);
+        }
+    }
     return true;
 }
 
-// Helper function to check if a device is in the exclude filter
+// Helper function to check if a device is in the exclude filters
 bool cMediaDetector::InDeviceFilter(const string dev)
 {
     stringSet::iterator it;
+    string devalias;
     for (it = mFilterDevices.begin(); it != mFilterDevices.end(); it++) {
         string s = *it;
-        if (dev.find(s) != string::npos) {
+        devalias = mDevkit.GetNativePath(dev);
+        if (devalias.find(s) != string::npos) {
+            return true;
+        }
+    }
+
+    for (it = mAutoFilterDevices.begin(); it != mAutoFilterDevices.end();
+         it++) {
+        string s = *it;
+        devalias = mDevkit.GetNativePath(dev);
+        if (devalias == s) {
+            return true;
+        }
+        devalias = mDevkit.GetDeviceFileById(dev).front();
+        if (devalias == s) {
+            return true;
+        }
+        devalias = mDevkit.GetDeviceFileByPath(dev).front();
+        if (devalias == s) {
             return true;
         }
     }
@@ -287,7 +339,7 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
 }
 
 stringList cMediaDetector::Detect(string &description,
-                                           cMediaHandle &mediainfo)
+                                  cMediaHandle &mediainfo)
 {
     string path;
     cMediaHandle descr(mLogger);
@@ -329,7 +381,7 @@ stringList cMediaDetector::Detect(string &description,
                         mLogger->logmsg(LOGLEVEL_INFO, "Media Available ");
                     }
 #endif
-                    if (InDeviceFilter(descr.GetDeviceFile())) {
+                    if (InDeviceFilter(path)) {
                         mLogger->logmsg(LOGLEVEL_INFO,
                                 "Device %s in device filter",
                                 descr.GetDeviceFile().c_str());

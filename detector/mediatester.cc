@@ -124,6 +124,7 @@ bool cMediaTester::loadConfig (cConfigFileParser config,
     }
     stringList::iterator it;
     // Check input string
+#ifndef _NOVDR_
     for (it = mKeylist.begin(); it != mKeylist.end(); it++) {
         string key = *it;
         mLogger->logmsg(LOGLEVEL_INFO, "Check key %s", key.c_str());
@@ -144,6 +145,7 @@ bool cMediaTester::loadConfig (cConfigFileParser config,
             }
         }
     }
+#endif
     return true;
 }
 

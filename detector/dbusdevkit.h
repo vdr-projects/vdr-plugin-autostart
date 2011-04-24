@@ -54,23 +54,30 @@ public:
     std::string FindDeviceByDeviceFile (const std::string device);
     stringList EnumerateDevices (void);
     // Do automount and return mount path
-    std::string AutoMount(const std::string path)
-                                throw (cDeviceKitException);
+    std::string AutoMount(const std::string path) throw (cDeviceKitException);
     void UnMount (const std::string &path)
-                                throw (cDeviceKitException) {
+                  throw (cDeviceKitException) {
         CallInterfaceV (path, "FilesystemUnmount");
     }
     std::string GetNativePath (const std::string &path)
-                                 throw (cDeviceKitException) {
+                                   throw (cDeviceKitException) {
         return GetDbusPropertyS (path, "native-path");
     }
     std::string GetType (const std::string &path)
-                          throw (cDeviceKitException) {
+                             throw (cDeviceKitException) {
         return GetDbusPropertyS (path, "id-type");
     }
     std::string GetDeviceFile (const std::string &path)
-                                 throw (cDeviceKitException) {
+                                   throw (cDeviceKitException) {
         return GetDbusPropertyS (path, "device-file");
+    }
+    stringList GetDeviceFileById (const std::string &path)
+                                    throw (cDeviceKitException) {
+        return GetDbusPropertyAS (path, "device-file-by-id");
+    }
+    stringList GetDeviceFileByPath (const std::string &path)
+                                         throw (cDeviceKitException) {
+        return GetDbusPropertyAS (path, "device-file-by-path");
     }
     stringList GetMountPaths (const std::string &path)
                                  throw (cDeviceKitException) {

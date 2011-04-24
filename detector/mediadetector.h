@@ -62,10 +62,14 @@ private:
     WORKING_MODE mWorkingMode;
     // Devices in filter list
     stringSet mFilterDevices;
+    stringSet mAutoFilterDevices;
+
     // Devices which are known due to insertion of a removable media
     stringSet mKnownDevices;
     // Devices to always scan, when manual scan is started
     stringSet mScanDevices;
+    // Filterdevices specified manually
+    bool mManualFilterDevice;
 
     volatile bool mRunning;
     volatile bool mManualScan;
@@ -78,6 +82,8 @@ private:
     bool DoDetect(cMediaHandle &, std::string &, stringList &);
     bool DoManualScan(cMediaHandle &, std::string &, stringList &);
     void DoDeviceRemoved(cMediaHandle mediainfo);
+
+    void ParseFstab (stringList &values);
 
 #ifdef DEBUG
     void logkeylist (stringList vl) {

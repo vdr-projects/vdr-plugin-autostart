@@ -99,7 +99,6 @@ stringQueue cConfigFileParser::TokenizeLine (const string line)
 
 bool cConfigFileParser::ParseLine (const string line)
 {
-    stringstream buffer(line);
     string token;
     string key;
     bool keysep = false;
@@ -156,23 +155,23 @@ bool cConfigFileParser::ParseLine (const string line)
 // Parse the config file
 bool cConfigFileParser::Parse(const string fname)
 {
-    ifstream mFile;
+    ifstream file;
     string line;
 
     mCurrSection.clear();
-    mFile.open(fname.c_str());
-    if (!mFile.is_open()) {
+    file.open(fname.c_str());
+    if (!file.is_open()) {
         string err = "Can not open file " + fname;
         mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
         return false;
     }
 
-    while (getline (mFile, line)) {
+    while (getline (file, line)) {
         if (!ParseLine (line)) {
             return false;
         }
     }
-    if (!mFile.eof()) {
+    if (!file.eof()) {
         string err = "Read error on file " + fname;
         mLogger->logmsg (LOGLEVEL_ERROR,err.c_str());
         return false;
@@ -287,8 +286,8 @@ bool cConfigFileParser::GetNextSection (Section::iterator &iter,
 // optional keywords and that all required keywords are present.
 
 bool cConfigFileParser::CheckSection (const string sectionname,
-                                           const stringSet required,
-                                           const stringSet optional)
+                                      const stringSet required,
+                                      const stringSet optional)
 {
     stringList::iterator it;
     stringList keys;
