@@ -204,7 +204,7 @@ void cFileTester::startScan (cMediaHandle &d)
     if (!(m & MEDIA_AVAILABLE))
     {
         mLogger->logmsg(LOGLEVEL_INFO, "Remove from device set");
-        mDeviceMap.erase(dev);
+        removeDevice (d);
         return;
     }
 
@@ -216,7 +216,7 @@ void cFileTester::startScan (cMediaHandle &d)
         mLogger->logmsg(LOGLEVEL_INFO, "Automount failed");
         return;
     }
-
+    mLogger->logmsg(LOGLEVEL_INFO, "Build cache for device %s", dev.c_str());
     BuildSuffixCache(d.GetMountPath());
 }
 
@@ -239,6 +239,7 @@ void cFileTester::endScan (cMediaHandle &d)
     devinfo.devPath = d.GetPath();
     devinfo.linkPath = mLinkPath;
     mDeviceMap[dev] = devinfo;
+    mLogger->logmsg(LOGLEVEL_INFO, "Add Device %s to device set", dev.c_str());
 }
 
 void cFileTester::removeDevice (cMediaHandle d)

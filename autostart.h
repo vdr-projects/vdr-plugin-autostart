@@ -17,7 +17,7 @@
 #include "configmenu.h"
 #include "autostartservice.h"
 
-static const char *VERSION        = "0.9.1";
+static const char *VERSION        = "0.9.2";
 static const char *DESCRIPTION    = tr("Start a plugin automatically");
 
 class cSenderThread : public cThread {

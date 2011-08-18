@@ -34,8 +34,8 @@ cMediaDetector::~cMediaDetector()
 // the file detector reads in the suffix list associated with a file detector
 // instance.
 void cMediaDetector::RegisterTester(const cMediaTester *tester,
-                                        const cConfigFileParser &config,
-                                        const string sectionname)
+                                    const cConfigFileParser &config,
+                                    const string sectionname)
 {
     cMediaTester *t = tester->create(mLogger);
     if (!t->loadConfig (mConfigFileParser, sectionname)) {
@@ -93,9 +93,11 @@ void cMediaDetector::ParseFstab (stringList &values)
         string options;
         string fs;
         buffer >> device;
-        buffer >> mountpoint;
-        buffer >> fs;
+        buffer >> mountpoint; // Ignored
+        buffer >> fs; // Ignored
         buffer >> options;
+
+        // Add all automatic mounted devices to exclude list
         if (options.find("noauto") == string::npos) {
             values.push_back(device);
         }
@@ -154,8 +156,8 @@ bool cMediaDetector::InitDetector(cLogger *logger,
     stringList::iterator it;
 
     mLogger = logger;
-    // Initialize known media testers
 
+    // Initialize known media testers
     mRegisteredMediaTesters.clear();
     mMediaTesters.clear();
     mMediaTesters.push_back(new cCdioTester(logger, "Audio CD", "CD"));
@@ -185,6 +187,7 @@ bool cMediaDetector::InitDetector(cLogger *logger,
         }
     }
 
+    // Detect available devices for use in manual scan
     vals = mDevkit.EnumerateDevices();
     for (it = vals.begin(); it != vals.end(); it++) {
         string dev = *it;
@@ -201,6 +204,8 @@ bool cMediaDetector::InDeviceFilter(const string dev)
 {
     stringSet::iterator it;
     string devalias;
+
+    // Perform a substring match for manually entered filter devices
     for (it = mFilterDevices.begin(); it != mFilterDevices.end(); it++) {
         string s = *it;
         devalias = mDevkit.GetNativePath(dev);
@@ -209,6 +214,7 @@ bool cMediaDetector::InDeviceFilter(const string dev)
         }
     }
 
+    // Perform exact match for automatic detected devices
     for (it = mAutoFilterDevices.begin(); it != mAutoFilterDevices.end();
          it++) {
         string s = *it;
@@ -232,6 +238,10 @@ bool cMediaDetector::InDeviceFilter(const string dev)
 void cMediaDetector::DoDeviceRemoved(cMediaHandle mediainfo)
 {
     MediaTesterList::iterator it;
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_INFO, "Device Remove %s",
+                   mediainfo.GetDeviceFile().c_str());
+#endif
     // Cleanup device caches for each detector
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
         cMediaTester *t = *it;
@@ -386,15 +396,24 @@ stringList cMediaDetector::Detect(string &description,
                                 "Device %s in device filter",
                                 descr.GetDeviceFile().c_str());
                     } else {
+                        if (mDevkit.IsMediaAvailable(path)) {
 #ifdef DEBUG
-                        mLogger->logmsg(LOGLEVEL_INFO,
+                            mLogger->logmsg(LOGLEVEL_INFO,
                                 "  ******** Detect ********");
 #endif
-                        // Detect media and return keylist if detection was
-                        // successful
-                        if (DoDetect(descr, description, keylist)) {
-                            mediainfo = descr;
-                            return (keylist);
+                            // Detect media and return keylist if detection was
+                            // successful
+                            if (DoDetect(descr, description, keylist)) {
+                                mediainfo = descr;
+                                return (keylist);
+                            }
+                        }
+                        else {
+#ifdef DEBUG
+                            mLogger->logmsg(LOGLEVEL_INFO,
+                                "  ******** Remove ********");
+#endif
+                            DoDeviceRemoved (mediainfo);
                         }
                     }
                 } catch (cDeviceKitException &e) {
