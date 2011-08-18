@@ -7,4 +7,4 @@ syntax: glob
 .dependencies
 po/*.mo
 po/*.pot
-
+push.sh
