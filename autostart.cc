@@ -117,7 +117,6 @@ bool cPluginAutostart::Service(const char *Id, void *Data)
     if (Data == NULL) {
         return false;
     }
-    dsyslog("Service %s received\n", Id);
     cMutexLock MutexLock(&mAutostartMutex);
     if (strcmp(Id, AUTOSTART_SERVICE_ID) == 0) {
         AutoStartService *se = (AutoStartService *)Data;
@@ -148,7 +147,7 @@ void cSenderThread::Action(void)
                 return;
             }
             cRemote::CallPlugin(key.c_str());
-            usleep(500);
+            usleep(10000);
             break;
 /*        case '#':       // Script
             key.erase(0,1);
@@ -161,8 +160,7 @@ void cSenderThread::Action(void)
             }
 
             cRemote::Put (keycode);
-
-            usleep(500);
+            usleep(10000);
             break;
         }
     }
