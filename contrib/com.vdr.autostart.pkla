@@ -1,0 +1,6 @@
+[Mounting, checking, etc. of internal drives]
+Identity=unix-user:vdr
+Action=org.freedesktop.udisks.filesystem-*
+ResultActive=yes
+ResultAny=auth_admin
+ResultInactive=yes

@@ -1,0 +1,12 @@
+autostart.conf
+
+  The default config file for this plugin
+
+com.vdr.autostart.pkla
+
+  A polkit configuration file in case VDR is not started as root and not
+  started from X.
+
+  Copy this file to /var/lib/polkit-1/localauthority/10-vendor.d and 
+  modify the line Identity=unix-user in case that VDR is not started
+  as vdr user.
