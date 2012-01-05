@@ -127,7 +127,7 @@ detector.a:
 	
 
 libvdr-$(PLUGIN).so: $(OBJS) detector.a
-	$(CXX) $(CXXFLAGS) -shared $(LIBS) $(OBJS) detector.a  -o $@
+	$(CXX) $(CXXFLAGS) -shared $(OBJS) detector.a $(LIBS) -o $@
 	@cp --remove-destination $@ $(LIBDIR)/$@.$(APIVERSION)
 
 dist: clean
