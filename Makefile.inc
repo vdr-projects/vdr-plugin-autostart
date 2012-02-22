@@ -1,9 +1,10 @@
-
-### The C++ compiler and options:
-
-CXX      ?= g++
-CXXFLAGS ?= -g -O2 -Wall -Woverloaded-virtual -Wno-parentheses
-#CXXFLAGS ?= -g3 -O0 -Wall -Woverloaded-virtual -Wno-parentheses
+# The official name of this plugin.
+# This name will be used in the '-P...' option of VDR to load the plugin.
+# By default the main source file also carries this name.
+# IMPORTANT: the presence of this macro is important for the Make.config
+# file. So it must be defined, even if it is not used here!
+#
+PLUGIN = autostart
 
 ### The directory environment:
 
@@ -17,15 +18,6 @@ DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # Uncomment to enable additional debug output
 DEFINES += -DDEBUG
 
-### The object files (add further files here):
 
-# Options for dbus
-LIBS = $(shell pkg-config --libs dbus-1)
-CXXFLAGS += $(shell pkg-config --cflags dbus-1)
-# Options for cdio
-LIBS += $(shell pkg-config --libs libcdio_cdda)
-CXXFLAGS += $(shell pkg-config --cflags libcdio_cdda)
-# Options for DVDRead
-LIBS += $(shell pkg-config --libs dvdread)
-CXXFLAGS += $(shell pkg-config --cflags dvdread)
+
 

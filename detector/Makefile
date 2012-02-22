@@ -1,4 +1,24 @@
+### Include defaults for the plugin
+
 include ../Makefile.inc
+
+### Make sure that necessary options are included:
+
+include $(VDRDIR)/../Make.global
+
+### Allow user defined options to overwrite defaults:
+
+-include $(VDRDIR)/../Make.config
+
+# Options for dbus
+LIBS = $(shell pkg-config --libs dbus-1)
+CXXFLAGS += $(shell pkg-config --cflags dbus-1)
+# Options for cdio
+LIBS += $(shell pkg-config --libs libcdio_cdda)
+CXXFLAGS += $(shell pkg-config --cflags libcdio_cdda)
+# Options for DVDRead
+LIBS += $(shell pkg-config --libs dvdread)
+CXXFLAGS += $(shell pkg-config --cflags dvdread)
 
 OBJS = cdiotester.o configfileparser.o dbusdevkit.o \
 		filetester.o mediadetector.o mediatester.o \

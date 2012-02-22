@@ -3,21 +3,13 @@
 #
 # $Id$
 
-# The official name of this plugin.
-# This name will be used in the '-P...' option of VDR to load the plugin.
-# By default the main source file also carries this name.
-# IMPORTANT: the presence of this macro is important for the Make.config
-# file. So it must be defined, even if it is not used here!
-#
-PLUGIN = autostart
+### Include defaults for the plugin
+
+include Makefile.inc
 
 ### The version number of this plugin (taken from the main source file):
 
 VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).h | awk '{ print $$6 }' | sed -e 's/[";]//g')
-
-### Include defaults for the plugin
-
-include Makefile.inc
 
 ### Make sure that necessary options are included:
 
@@ -26,6 +18,7 @@ include $(VDRDIR)/Make.global
 ### Allow user defined options to overwrite defaults:
 
 -include $(VDRDIR)/Make.config
+
 
 ifneq (exists, $(shell pkg-config dbus-1 && echo exists))
   $(warning ******************************************************************)
