@@ -1,7 +1,7 @@
 /*
  * autostart.h: A plugin for the Video Disk Recorder
  *
- * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ * Copyright (C) 2010-2012 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -17,7 +17,7 @@
 #include "configmenu.h"
 #include "autostartservice.h"
 
-static const char *VERSION        = "0.9.3";
+static const char *VERSION        = "0.9.4";
 static const char *DESCRIPTION    = tr("Start a plugin automatically");
 
 class cSenderThread : public cThread {
