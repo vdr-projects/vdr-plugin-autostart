@@ -30,7 +30,7 @@ VDR Plugin 'autostart' Revision History
 
 - Fix Makefile problems
 
-2012-01-26: Version 0.9.5
+2013-01-26: Version 0.9.5
 
 - Support for new make system of VDR 1.7.35. The new make file is now the 
   default. For compiling on older VDR Versions change the links of Makefile,
