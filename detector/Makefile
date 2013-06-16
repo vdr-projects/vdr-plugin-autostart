@@ -7,8 +7,8 @@ PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(s
 LIBS = $(shell pkg-config --libs dbus-1)
 CXXFLAGS += $(shell pkg-config --cflags dbus-1)
 # Options for cdio
-LIBS += $(shell pkg-config --libs libcdio_cdda)
-CXXFLAGS += $(shell pkg-config --cflags libcdio_cdda)
+LIBS += $(shell pkg-config --libs libcdio)
+CXXFLAGS += $(shell pkg-config --cflags libcdio)
 # Options for DVDRead
 LIBS += $(shell pkg-config --libs dvdread)
 CXXFLAGS += $(shell pkg-config --cflags dvdread)

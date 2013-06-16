@@ -20,9 +20,9 @@ ifneq (exists, $(shell pkg-config dbus-1 && echo exists))
   $(warning ******************************************************************)
 endif
 
-ifneq (exists, $(shell pkg-config libcdio_cdda && echo exists))
+ifneq (exists, $(shell pkg-config libcdio && echo exists))
   $(warning ******************************************************************)
-  $(warning 'libcdio_cdda' not detected! ')
+  $(warning 'libcdio' not detected! ')
   $(warning ******************************************************************)
 endif
 
@@ -65,8 +65,9 @@ OBJS = $(PLUGIN).o mediadetectorthread.o configmenu.o
 LIBS = $(shell pkg-config --libs dbus-1)
 CXXFLAGS += $(shell pkg-config --cflags dbus-1)
 # Options for cdio
-LIBS += $(shell pkg-config --libs libcdio_cdda)
-CXXFLAGS += $(shell pkg-config --cflags libcdio_cdda)
+LIBS += $(shell pkg-config --libs libcdio)
+CXXFLAGS += $(shell pkg-config --cflags libcdio)
+
 # Options for DVDRead
 LIBS += $(shell pkg-config --libs dvdread)
 CXXFLAGS += $(shell pkg-config --cflags dvdread)

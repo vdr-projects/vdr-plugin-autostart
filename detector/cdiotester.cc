@@ -8,7 +8,7 @@
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
  */
 #include "cdiotester.h"
-#include <cdio/cdda.h>
+#include <cdio/cdio.h>
 
 bool cCdioTester::isMedia (cMediaHandle d, stringList &keylist)
 {
