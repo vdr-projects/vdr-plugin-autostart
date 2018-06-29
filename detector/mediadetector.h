@@ -32,6 +32,8 @@ public:
         mRunning = false;
         mWorkingMode = AUTO_START;
         mManualScan = false;
+        mManualFilterDevice = false;
+        mLogger = NULL;
     }
 
     ~cMediaDetector();

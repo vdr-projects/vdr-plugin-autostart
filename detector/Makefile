@@ -16,7 +16,7 @@ CXXFLAGS += $(shell pkg-config --cflags dvdread)
 OBJS = cdiotester.o configfileparser.o dbusdevkit.o \
 		filetester.o mediadetector.o mediatester.o \
 		videodvdtester.o
-HEADER = $(OBJS:%.o=%.h) logger.h stringtools.h
+HEADER = $(OBJS:%.o=%.h) logger.h stringtools.h dbusdevkit.h
 
 OBJLIBS = ../detector.a 
 
@@ -56,8 +56,8 @@ $(DEPFILE): Makefile
 ### Build test programm
 
 .PHONY: test
-test: CXXFLAGS += -D_NOVDR_
+test: CXXFLAGS += -D_NOVDR_ -DDEBUG
 test: $(TESTOBJS) $(OBJLIBS) $(OBJS) $(HEADER)
-	$(CXX) $(CXXFLAGS) $(LIBS) $(TESTOBJS) $(OBJLIBS) -o detectortest
+	$(CXX) $(CXXFLAGS) $(TESTOBJS) ../detector.a $(LIBS) -o detectortest
 	
 

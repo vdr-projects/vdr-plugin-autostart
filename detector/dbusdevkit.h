@@ -3,7 +3,7 @@
  *               interface
  *
  *
- * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ * Copyright (C) 2010-2018 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -14,6 +14,7 @@
 
 #include <dbus/dbus.h>
 #include <string>
+#include <string.h>
 #include <list>
 #include <exception>
 #include <stdio.h>
@@ -51,8 +52,9 @@ public:
     ~cDbusDevkit();
     bool WaitDevkit(int timeout, std::string &retpath, DEVICE_SIGNAL &signal);
 
-    std::string FindDeviceByDeviceFile (const std::string device);
-    stringList EnumerateDevices (void);
+    std::string FindDeviceByDeviceFile (const std::string device)
+                                                throw (cDeviceKitException);
+    stringList EnumerateDevices (void) throw (cDeviceKitException);
     // Do automount and return mount path
     std::string AutoMount(const std::string path) throw (cDeviceKitException);
     void UnMount (const std::string &path)
@@ -61,6 +63,13 @@ public:
     }
     std::string GetNativePath (const std::string &path)
                                    throw (cDeviceKitException) {
+        mLogger->logmsg(LOGLEVEL_ERROR,"Path %s ", path.c_str());
+        if (mUDisk2) {
+            size_t end = strlen(UDISKS_OBJECT2_DEV);
+            std::string newpath = path.substr(end);
+            newpath = "/dev" + newpath;
+            return (newpath);
+        }
         return GetDbusPropertyS (path, "native-path");
     }
     std::string GetType (const std::string &path)
@@ -93,6 +102,9 @@ public:
     }
     bool IsPartition(const std::string &path)
                        throw (cDeviceKitException) {
+        if (mUDisk2) {
+            return GetDbusPropertyB (path, "HintPartitionable");
+        }
         return GetDbusPropertyB (path, "device-is-partition");
     }
     bool IsMediaAvailable(const std::string &path)
@@ -103,12 +115,19 @@ public:
     DBusConnection *mConnSystem;
     DBusError mErr;
     cLogger *mLogger;
+    bool mUDisk2;
 
-    static const char *DEVICEKIT_DISKS_SERVICE;
-    static const char *UDISKS_SERVICE;
     static const char *DBUS_NAME;
+    static const char *DEVICEKIT_DISKS_SERVICE;
     static const char *DEVICEKIT_DISKS_OBJECT;
+
+    static const char *UDISKS_SERVICE;
     static const char *UDISKS_OBJECT;
+
+    static const char *UDISKS_SERVICE2;
+    static const char *UDISKS_OBJECT2;
+    static const char *UDISKS_OBJECT2_DEV;
+
 
     const char *mService;
     const char *mObjectPath;
@@ -143,6 +162,14 @@ public:
                            const std::string &name)
                            throw (cDeviceKitException);
 
+    // Start a dbus service
+    bool StartService(const char *name);
+
+    // Udisks2 stuff
+    // Optimistic ;-) xml parser
+    char *getXML(char **val, const char *tag);
+
+    stringList EnumerateDevices2 (void) throw (cDeviceKitException);
 
 };
 

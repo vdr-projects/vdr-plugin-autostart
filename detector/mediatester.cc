@@ -8,6 +8,7 @@
  */
 
 #include "mediatester.h"
+#include <unistd.h>
 #ifndef _NOVDR_
 #include <vdr/plugin.h>
 #else

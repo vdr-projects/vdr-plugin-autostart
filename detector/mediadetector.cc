@@ -188,13 +188,18 @@ bool cMediaDetector::InitDetector(cLogger *logger,
     }
 
     // Detect available devices for use in manual scan
-    vals = mDevkit.EnumerateDevices();
-    for (it = vals.begin(); it != vals.end(); it++) {
-        string dev = *it;
-        if (!mDevkit.IsPartition(dev) && (!InDeviceFilter(dev))) {
-            mLogger->logmsg(LOGLEVEL_INFO, "Enumerate dev %s", dev.c_str());
-            mScanDevices.insert(dev);
+
+    try {
+        vals = mDevkit.EnumerateDevices();
+        for (it = vals.begin(); it != vals.end(); it++) {
+            string dev = *it;
+            if (!mDevkit.IsPartition(dev) && (!InDeviceFilter(dev))) {
+                mLogger->logmsg(LOGLEVEL_INFO, "Enumerate dev %s", dev.c_str());
+                mScanDevices.insert(dev);
+            }
         }
+    } catch (cDeviceKitException &e) {
+        mLogger->logmsg(LOGLEVEL_ERROR, "Enumeration failed %s", e.what());
     }
     return true;
 }

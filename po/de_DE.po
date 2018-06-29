@@ -1,5 +1,5 @@
 # Autostart plugin language source file.
-# Copyright (C) 2010-2013 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+# Copyright (C) 2010-2018 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
 # This file is distributed under the same license as the VDR package.
 # Ulrich Eckhardt
 #
@@ -11,7 +11,7 @@ msgstr ""
 "PO-Revision-Date: 2013-02-12 17:18+0100\n"
 "Last-Translator: Ulrich Eckhardt <vdr@uli-eckhardt.de>\n"
 "Language-Team: German\n"
-"Language: \n"
+"Language: German\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,7 +20,7 @@ msgid "Autostart"
 msgstr "Autostart"
 
 msgid "Start a plugin automatically"
-msgstr ""
+msgstr "Plugin automatisch starten"
 
 msgid "Automatic"
 msgstr "Automatisch"

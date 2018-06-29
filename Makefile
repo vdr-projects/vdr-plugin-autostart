@@ -74,7 +74,7 @@ CXXFLAGS += $(shell pkg-config --cflags dvdread)
 
 ### The main target:
 
-all: $(SOFILE) i18n
+all: $(SOFILE) i18n detector
 
 ### Implicit rules:
 
@@ -118,7 +118,7 @@ install-i18n: $(I18Nmsgs)
 
 ### Targets:
 
-detector.a:
+detector: 
 	@cd detector; $(MAKE)
 	
 
@@ -138,7 +138,7 @@ dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
 	@echo Distribution package created as $(PACKAGE).tgz
 
-.PHONY: clean
+.PHONY: clean detector
 clean:
 	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot 
 	@cd detector; $(MAKE) clean

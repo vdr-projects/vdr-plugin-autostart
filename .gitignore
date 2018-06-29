@@ -7,4 +7,10 @@ syntax: glob
 .dependencies
 po/*.mo
 po/*.pot
+.cproject
+.project
+.settings
+detector/detectortest
+vdr-autostart-*.tgz
+
 push.sh
