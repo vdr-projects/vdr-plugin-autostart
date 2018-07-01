@@ -118,7 +118,7 @@ install-i18n: $(I18Nmsgs)
 
 ### Targets:
 
-detector: 
+detector.a: 
 	@cd detector; $(MAKE)
 	
 
@@ -138,7 +138,7 @@ dist: clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
 	@echo Distribution package created as $(PACKAGE).tgz
 
-.PHONY: clean detector
+.PHONY: clean detector.a
 clean:
 	@-rm -f $(OBJS) $(TESTOBJS) $(DEPFILE) *.so *.tgz core* *~ $(PODIR)/*.mo $(PODIR)/*.pot 
 	@cd detector; $(MAKE) clean
