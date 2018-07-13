@@ -33,7 +33,10 @@ private:
     // Devices which are already processed
     static DevMap mDeviceMap;
     static std::string mLinkPath;
+    std::string mMountPath;
     static bool mAutoMount;
+    bool mMountError;
+    cDbusDevkit *mDevKit;
 
     stringSet mSuffix;
     std::string mConfiguredLinkPath;
@@ -49,6 +52,10 @@ private:
     }
     bool RmLink(const std::string ln);
     void Link(const std::string ln);
+    void Umount(const std::string devpath);
+    bool AutoMount(const std::string devpath);
+    bool isAutoMounted (void) {return (!mMountPath.empty());}
+    std::string GetMountPath (void) {return mMountPath;}
 
 public:
     cFileTester(cLogger *l, std::string descr, std::string ext) :
@@ -57,6 +64,9 @@ public:
         mRequiredKeys.insert("FILES");
         mOptionalKeys.insert("LINKPATH");
         mOptionalKeys.insert("AUTOMOUNT");
+        mMountError = false;
+        mMountPath.clear();
+        mDevKit = NULL;
     }
 
     bool isMedia (const cMediaHandle d, stringList &keylist);
@@ -65,9 +75,10 @@ public:
     }
     bool loadConfig (cConfigFileParser config,
                        const std::string sectionname);
-    void startScan (cMediaHandle &d);
+    void startScan (cMediaHandle &d, cDbusDevkit *devkit);
     void endScan (cMediaHandle &d);
     void removeDevice (cMediaHandle d);
+    bool hasMountError(void) {return mMountError; }
 };
 
 #endif /* FILEDETECTOR_H_ */

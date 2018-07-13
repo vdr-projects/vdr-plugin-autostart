@@ -93,10 +93,17 @@ void cFileTester::BuildSuffixCache (string path) {
     struct stat st;
     string file;
 
-    if (path.at(path.length()-1) != '/') {
-        path += "/";
+    if (path.empty()) {
+        mLogger->logmsg(LOGLEVEL_ERROR, "No mount path");
+        return;
     }
 
+    if (path.back() != '/') {
+        path.append("/");
+    }
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_ERROR, "file/dir %s", path.c_str());
+#endif
     dp = opendir (path.c_str());
     if (dp == NULL) {
         mLogger->logmsg(LOGLEVEL_ERROR, "Could not open %s : %s",
@@ -107,6 +114,7 @@ void cFileTester::BuildSuffixCache (string path) {
     while ((ep = readdir(dp)) != NULL) {
         if (ep->d_name[0] != '.') {
             file = path + ep->d_name;
+
             if (stat(file.c_str(), &st) != 0) {
                 mLogger->logmsg(LOGLEVEL_ERROR, "Can not stat file %s: %s",
                                file.c_str(), strerror(errno));
@@ -118,7 +126,6 @@ void cFileTester::BuildSuffixCache (string path) {
             } else if (S_ISREG(st.st_mode)) {
                 string suf = GetSuffix(ep->d_name);
                 mDetectedSuffixCache.insert(suf);
-
             }
         }
     }
@@ -194,11 +201,12 @@ bool cFileTester::loadConfig (cConfigFileParser config,
     return true;
 }
 
-void cFileTester::startScan (cMediaHandle &d)
+void cFileTester::startScan (cMediaHandle &d, cDbusDevkit *devkit)
 {
     MEDIA_MASK_T m = d.GetMediaMask();
     string dev = d.GetDeviceFile();
 
+    mDevKit = devkit;
     mLinkPath.clear();
     mDetectedSuffixCache.clear();
     if (!(m & MEDIA_AVAILABLE))
@@ -212,28 +220,33 @@ void cFileTester::startScan (cMediaHandle &d)
         mLogger->logmsg(LOGLEVEL_INFO, "startScan Device already in device set");
         return;
     }
-    if (!d.AutoMount()) {
+    if (!AutoMount(d.GetPath())) {
         mLogger->logmsg(LOGLEVEL_INFO, "Automount failed");
+        mMountError = true;
         return;
     }
     mLogger->logmsg(LOGLEVEL_INFO, "Build cache for device %s", dev.c_str());
-    BuildSuffixCache(d.GetMountPath());
+    BuildSuffixCache(GetMountPath());
 }
 
 void cFileTester::endScan (cMediaHandle &d)
 {
     string dev = d.GetDeviceFile();
+
+    if (hasMountError()) {
+        mLogger->logmsg(LOGLEVEL_INFO, "error on scan");
+        return;
+    }
     if (inDeviceSet(dev)) {
         mLogger->logmsg(LOGLEVEL_INFO, "endScan Device already in device set");
         return;
     }
-
-    if ((d.isAutoMounted()) && (!mLinkPath.empty())) {
+    if ((isAutoMounted()) && (!mLinkPath.empty())) {
         mLogger->logmsg(LOGLEVEL_INFO, "Linking to %s", mLinkPath.c_str());
-        Link(d.GetMountPath());
+        Link(GetMountPath());
     }
     if (!mAutoMount) {
-        d.Umount();
+        Umount(dev);
     }
     DEVINFO devinfo;
     devinfo.devPath = d.GetPath();
@@ -258,3 +271,38 @@ void cFileTester::removeDevice (cMediaHandle d)
         }
     }
 }
+
+// Try to auto mount the media
+bool cFileTester::AutoMount(string devpath)
+{
+    int i;
+    mMountPath.clear();
+    // We will try several times since other tasks, for example
+    // other window managers may also try to automount.
+    for(i = 0; i < 3; i++)
+    {
+        try {
+            if (!mDevKit->IsMounted(devpath)) {
+                mLogger->logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
+                        mDevKit->AutoMount(devpath).c_str());
+            }
+            mMountPath = mDevKit->GetMountPaths(devpath).front();
+            mLogger->logmsg(LOGLEVEL_INFO, "Mount Path >%s< %d",
+                    mMountPath.c_str(), mMountPath.length()); // TODO
+            if (!mMountPath.empty()) {
+                return true;
+            }
+        } catch (cDeviceKitException &e) {
+            mLogger->logmsg(LOGLEVEL_ERROR, "AutoMount DeviceKit Error %s", e.what());
+        }
+        sleep(1);
+    }
+    return false;
+}
+
+void cFileTester::Umount(string devpath)
+{
+    mDevKit->UnMount(devpath);
+    mMountPath.clear();
+}
+

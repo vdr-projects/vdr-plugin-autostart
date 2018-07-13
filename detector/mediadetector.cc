@@ -214,6 +214,10 @@ bool cMediaDetector::InDeviceFilter(const string dev)
     for (it = mFilterDevices.begin(); it != mFilterDevices.end(); it++) {
         string s = *it;
         devalias = mDevkit.GetNativePath(dev);
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_INFO, "GetNativePath %s",
+            devalias.c_str());
+#endif
         if (devalias.find(s) != string::npos) {
             return true;
         }
@@ -224,14 +228,26 @@ bool cMediaDetector::InDeviceFilter(const string dev)
          it++) {
         string s = *it;
         devalias = mDevkit.GetNativePath(dev);
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_INFO, "GetNativePath %s",
+            devalias.c_str());
+#endif
         if (devalias == s) {
             return true;
         }
         devalias = mDevkit.GetDeviceFileById(dev).front();
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_INFO, "GetDeviceFileById %s",
+            devalias.c_str());
+#endif
         if (devalias == s) {
             return true;
         }
         devalias = mDevkit.GetDeviceFileByPath(dev).front();
+#ifdef DEBUG
+    mLogger->logmsg(LOGLEVEL_INFO, "GetDeviceFileByPath %s",
+            devalias.c_str());
+#endif
         if (devalias == s) {
             return true;
         }
@@ -311,7 +327,7 @@ bool cMediaDetector::DoDetect(cMediaHandle &mediainfo,
     for (it = mMediaTesters.begin(); it != mMediaTesters.end(); it++) {
         cMediaTester *t = *it;
         try {
-            t->startScan(mediainfo);
+            t->startScan(mediainfo, &mDevkit);
         } catch (cDeviceKitException &e) {
             mLogger->logmsg(LOGLEVEL_INFO, "DeviceKit Error %s", e.what());
         }
@@ -404,7 +420,7 @@ stringList cMediaDetector::Detect(string &description,
                         if (mDevkit.IsMediaAvailable(path)) {
 #ifdef DEBUG
                             mLogger->logmsg(LOGLEVEL_INFO,
-                                "  ******** Detect ********");
+                                "  ******** Add/Detect ********");
 #endif
                             // Detect media and return keylist if detection was
                             // successful
@@ -417,6 +433,8 @@ stringList cMediaDetector::Detect(string &description,
 #ifdef DEBUG
                             mLogger->logmsg(LOGLEVEL_INFO,
                                 "  ******** Remove ********");
+                            mLogger->logmsg(LOGLEVEL_INFO, "Path       : %s",
+                                                        path.c_str());
 #endif
                             DoDeviceRemoved (mediainfo);
                         }

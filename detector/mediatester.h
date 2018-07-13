@@ -37,24 +37,28 @@ private:
     std::string mNativePath;
     std::string mDeviceFile;
     std::string mType;
-    std::string mMountPath;
+
     MEDIA_MASK_T mMediaMask;
     cDbusDevkit *mDevKit;
     cLogger *mLogger;
 
 public:
-    cMediaHandle() {mLogger = NULL; mDevKit = NULL;}
-    cMediaHandle(cLogger *l) { mLogger = l; mDevKit = NULL; }
+    cMediaHandle() {
+        mLogger = NULL;
+        mDevKit = NULL;
+        mMediaMask = 0;
+    }
+    cMediaHandle(cLogger *l) {
+        mLogger = l;
+        mDevKit = NULL;
+        mMediaMask = 0;
+    }
     bool GetDescription(cDbusDevkit &d, const std::string &path);
     std::string GetNativePath(void) {return mNativePath;}
     std::string GetDeviceFile(void) {return mDeviceFile;}
     std::string GetType(void) {return mType;}
     std::string GetPath(void) {return mPath;}
-    std::string GetMountPath (void) {return mMountPath;}
     MEDIA_MASK_T GetMediaMask(void) {return mMediaMask;}
-    bool AutoMount(void);
-    void Umount(void);
-    bool isAutoMounted (void) {return (!mMountPath.empty());}
 };
 
 // Base class for all testers.
@@ -97,7 +101,7 @@ public:
     // logger.
     virtual cMediaTester *create(cLogger *) const = 0;
     // Hook called before a scan starts
-    virtual void startScan (cMediaHandle &d) {};
+    virtual void startScan (cMediaHandle &d, cDbusDevkit *devkit) {};
     // Hook called when scan ends
     virtual void endScan (cMediaHandle &d) {};
     // Hook called when the device is removed

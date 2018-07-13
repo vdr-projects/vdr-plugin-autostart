@@ -61,38 +61,6 @@ bool cMediaHandle::GetDescription (cDbusDevkit &d,
     return (success);
 }
 
-// Try to auto mount the media
-bool cMediaHandle::AutoMount(void)
-{
-    int i;
-
-    mMountPath.clear();
-    // We will try several times since other tasks, for example
-    // other window managers may also try to automount.
-    for(i = 0; i < 3; i++)
-    {
-        try {
-            if (!mDevKit->IsMounted(mPath)) {
-                mLogger->logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
-                        mDevKit->AutoMount(mPath).c_str());
-            }
-            mMountPath = mDevKit->GetMountPaths(mPath).front();
-            mLogger->logmsg(LOGLEVEL_INFO, "Mount Path %s", mMountPath.c_str());
-            return true;
-        } catch (cDeviceKitException &e) {
-            mLogger->logmsg(LOGLEVEL_ERROR, "AutoMount DeviceKit Error %s", e.what());
-        }
-        sleep(1);
-    }
-    return false;
-}
-
-void cMediaHandle::Umount(void)
-{
-    mDevKit->UnMount(mPath);
-    mMountPath.clear();
-}
-
 stringList cMediaTester::getList(cConfigFileParser config,
                                     const string sectionname,
                                     const string key)

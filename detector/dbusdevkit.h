@@ -57,60 +57,22 @@ public:
     stringList EnumerateDevices (void) throw (cDeviceKitException);
     // Do automount and return mount path
     std::string AutoMount(const std::string path) throw (cDeviceKitException);
-    void UnMount (const std::string &path)
-                  throw (cDeviceKitException) {
-        CallInterfaceV (path, "FilesystemUnmount");
-    }
+    void UnMount (const std::string &path) throw (cDeviceKitException);
     std::string GetNativePath (const std::string &path)
-                                   throw (cDeviceKitException) {
-        mLogger->logmsg(LOGLEVEL_ERROR,"Path %s ", path.c_str());
-        if (mUDisk2) {
-            size_t end = strlen(UDISKS_OBJECT2_DEV);
-            std::string newpath = path.substr(end);
-            newpath = "/dev" + newpath;
-            return (newpath);
-        }
-        return GetDbusPropertyS (path, "native-path");
-    }
-    std::string GetType (const std::string &path)
-                             throw (cDeviceKitException) {
-        return GetDbusPropertyS (path, "id-type");
-    }
+                                   throw (cDeviceKitException) ;
+
+    std::string GetType (const std::string &path) throw (cDeviceKitException);
     std::string GetDeviceFile (const std::string &path)
-                                   throw (cDeviceKitException) {
-        return GetDbusPropertyS (path, "device-file");
-    }
+                                           throw (cDeviceKitException);
     stringList GetDeviceFileById (const std::string &path)
-                                    throw (cDeviceKitException) {
-        return GetDbusPropertyAS (path, "device-file-by-id");
-    }
+                                            throw (cDeviceKitException);
     stringList GetDeviceFileByPath (const std::string &path)
-                                         throw (cDeviceKitException) {
-        return GetDbusPropertyAS (path, "device-file-by-path");
-    }
-    stringList GetMountPaths (const std::string &path)
-                                 throw (cDeviceKitException) {
-        return GetDbusPropertyAS (path, "DeviceMountPaths");
-    }
-    bool IsMounted(const std::string &path)
-                     throw (cDeviceKitException){
-        return GetDbusPropertyB (path, "device-is-mounted");
-    }
-    bool IsOpticalDisk(const std::string &path)
-                         throw (cDeviceKitException) {
-        return GetDbusPropertyB (path, "device-is-optical-disc");
-    }
-    bool IsPartition(const std::string &path)
-                       throw (cDeviceKitException) {
-        if (mUDisk2) {
-            return GetDbusPropertyB (path, "HintPartitionable");
-        }
-        return GetDbusPropertyB (path, "device-is-partition");
-    }
-    bool IsMediaAvailable(const std::string &path)
-                             throw (cDeviceKitException) {
-        return GetDbusPropertyB (path, "device-is-media-available");
-    }
+                                             throw (cDeviceKitException);
+    stringList GetMountPaths (const std::string &path) throw (cDeviceKitException);
+    bool IsMounted(const std::string &path) throw (cDeviceKitException);
+    bool IsOpticalDisk(const std::string &path) throw (cDeviceKitException);
+    bool IsPartition(const std::string &path) throw (cDeviceKitException);
+    bool IsMediaAvailable(const std::string &path) throw (cDeviceKitException);
   private:
     DBusConnection *mConnSystem;
     DBusError mErr;
@@ -118,59 +80,68 @@ public:
     bool mUDisk2;
 
     static const char *DBUS_NAME;
-    static const char *DEVICEKIT_DISKS_SERVICE;
-    static const char *DEVICEKIT_DISKS_OBJECT;
+    static const std::string DEVICEKIT_DISKS_SERVICE;
+    static const std::string DEVICEKIT_DISKS_OBJECT;
 
-    static const char *UDISKS_SERVICE;
-    static const char *UDISKS_OBJECT;
+    static const std::string UDISKS_SERVICE;
+    static const std::string UDISKS_OBJECT;
+    static const std::string UDISKS_INTERFACE;
 
-    static const char *UDISKS_SERVICE2;
-    static const char *UDISKS_OBJECT2;
-    static const char *UDISKS_OBJECT2_DEV;
+    static const std::string UDISKS_SERVICE2;
+    static const std::string UDISKS_OBJECT2;
+    static const std::string UDISKS_OBJECT2_DEV;
 
 
-    const char *mService;
-    const char *mObjectPath;
+    std::string mService;
+    std::string mObjectPath;
 
-    std::string mDevicekitInterface;
-
+    std::string GetString(DBusMessageIter &subiter)
+                                        throw (cDeviceKitException);
     DBusMessage *CallDbusProperty (const std::string &path,
                                      const std::string &name,
-                                     DBusMessageIter *iter)
+                                     DBusMessageIter *iter,
+                                     const std::string &udisk_interface)
                                      throw (cDeviceKitException);
-     // Property s
+
+    // Property string (or array of byte)
     std::string GetDbusPropertyS (const std::string &path,
-                                    const std::string &name)
+                                    const std::string &name,
+                                    const std::string &udisk_interface)
                                     throw (cDeviceKitException);
     // Property as (String Array)
     stringList GetDbusPropertyAS (const std::string &path,
-                                     const std::string &name)
+                                     const std::string &name,
+                                     const std::string &udisk_interface)
                                      throw (cDeviceKitException);
-    // Property u
+    // Property integer
     dbus_int32_t GetDbusPropertyU (const std::string &path,
-                                     const std::string &name)
+                                     const std::string &name,
+                                     const std::string &udisk_interface,
+                                     int defaultval = -1)
                                      throw (cDeviceKitException);
-    // Property b
+    // Property boolean
     bool GetDbusPropertyB (const std::string &path,
-                              const std::string &name)
+                              const std::string &name,
+                              const std::string &udisk_interface,
+                              bool defaultval = false)
                               throw (cDeviceKitException);
     bool WaitConn (void) throw (cDeviceKitException);
 
 
     // Call an interface method which does not return a value
     void CallInterfaceV(const std::string &path,
-                           const std::string &name)
+                        const std::string &name,
+                        const std::string &interface)
                            throw (cDeviceKitException);
 
     // Start a dbus service
-    bool StartService(const char *name);
+    bool StartService(const std::string &name);
 
     // Udisks2 stuff
     // Optimistic ;-) xml parser
     char *getXML(char **val, const char *tag);
 
     stringList EnumerateDevices2 (void) throw (cDeviceKitException);
-
 };
 
 #endif /* DBUSDEVKIT_H_ */

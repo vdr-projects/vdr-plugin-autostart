@@ -2,7 +2,7 @@
  * cdiotester.cc: Detects audio CDs, using libcdio.
  *
  *
- * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ * Copyright (C) 2010-2018 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -16,7 +16,10 @@ bool cCdioTester::isMedia (cMediaHandle d, stringList &keylist)
     bool ismedia = TRUE;
     track_t tr;
     MEDIA_MASK_T m = d.GetMediaMask();
-
+#ifdef DEBUG
+  mLogger->logmsg(LOGLEVEL_INFO, "CDIO check file >%s< %x",
+          d.GetDeviceFile().c_str(), m);
+#endif
     if (!(m & MEDIA_OPTICAL)) {
         return (false);
     }
