@@ -9,7 +9,14 @@ include Makefile.inc
 
 ### The version number of this plugin (taken from the main source file):
 
-VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).h | awk '{ print $$6 }' | sed -e 's/[";]//g')
+### The version number of this plugin (taken from the main source file):
+
+VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).h | \
+			grep -v GIT | \
+			awk '{ print $$6 }' | sed -e 's/[";]//g')
+
+GIT_REV = $(shell git describe --always 2>/dev/null)
+
 PKGCFG = $(if $(VDRDIR),$(shell pkg-config --variable=$(1) $(VDRDIR)/vdr.pc),$(shell pkg-config --variable=$(1) vdr || pkg-config --variable=$(1) ../../../vdr.pc))
 CFGDIR = $(call PKGCFG,configdir)/plugins/$(PLUGIN)
 PLGCFG = $(call PKGCFG,plgcfg)
@@ -51,11 +58,13 @@ SOFILE = libvdr-$(PLUGIN).so
 
 ### Includes and Defines (add further entries here):
 
-INCLUDES += 
+INCLUDES +=
+ 
+DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"' \
+	$(if $(GIT_REV), -DGIT_REV='"$(GIT_REV)"')
 
-DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 # Uncomment to enable additional debug output
-DEFINES += -DDEBUG
+#DEFINES += -DDEBUG
 
 ### The object files (add further files here):
 

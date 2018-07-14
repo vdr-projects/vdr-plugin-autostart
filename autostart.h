@@ -17,7 +17,11 @@
 #include "configmenu.h"
 #include "autostartservice.h"
 
-static const char *VERSION        = "0.9.7";
+#ifndef GIT_REV
+static const char *VERSION = "0.9.7";
+#else
+static const char *VERSION = GIT_REV;
+#endif
 static const char *DESCRIPTION    = tr("Start a plugin automatically");
 
 class cSenderThread : public cThread {
