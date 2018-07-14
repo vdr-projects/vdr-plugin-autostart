@@ -17,7 +17,7 @@ bool cCdioTester::isMedia (cMediaHandle d, stringList &keylist)
     track_t tr;
     MEDIA_MASK_T m = d.GetMediaMask();
 #ifdef DEBUG
-  mLogger->logmsg(LOGLEVEL_INFO, "CDIO check file >%s< %x",
+  mLogger->logmsg(LOGLEVEL_INFO, "cCdioTester: CDIO check file >%s< %x",
           d.GetDeviceFile().c_str(), m);
 #endif
     if (!(m & MEDIA_OPTICAL)) {
@@ -29,7 +29,7 @@ bool cCdioTester::isMedia (cMediaHandle d, stringList &keylist)
     }
     cdio = cdio_open(d.GetDeviceFile().c_str(), DRIVER_DEVICE);
     if (cdio == NULL) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "Can not open %s",
+        mLogger->logmsg(LOGLEVEL_ERROR, "cCdioTester: Can not open %s",
                                          d.GetNativePath().c_str());
         return false;
     }

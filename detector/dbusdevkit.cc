@@ -164,10 +164,10 @@ bool cDbusDevkit::WaitDevkit(int timeout, string &retpath, DEVICE_SIGNAL &signal
         devkitmsg = dbus_connection_pop_message(mConnSystem);
         if (devkitmsg != NULL) {
             string path = dbus_message_get_path(devkitmsg);
-            mLogger->logmsg(LOGLEVEL_INFO, "Message received %s Member %s Path %s",
+            /* mLogger->logmsg(LOGLEVEL_INFO, "Message received %s Member %s Path %s",
                     dbus_message_get_interface(devkitmsg),
                     dbus_message_get_member(devkitmsg),
-                    path.c_str());
+                    path.c_str()); */
             signal = Unkown;
             // check if the message is a signal from the correct interface and with the correct name
             if (dbus_message_is_signal(devkitmsg, service, "DeviceAdded")) {
@@ -266,6 +266,9 @@ string cDbusDevkit::FindDeviceByDeviceFile (const string device) throw (cDeviceK
     return retval;
 }
 
+/*
+ * Optimistic XML "parser"
+ */
 char *cDbusDevkit::getXML(char **val, const char *tag)
 {
     char *start = strstr(*val, tag);
@@ -493,6 +496,9 @@ DBusMessage *cDbusDevkit::CallDbusProperty (const string &path,
     return msg;
 }
 
+/*
+ * Get string from an iterator of types String, Object Path or Byte Array
+ */
 string cDbusDevkit::GetString(DBusMessageIter &iter) throw (cDeviceKitException) {
    DBusMessageIter subiter;
    string retval = "";
@@ -644,7 +650,7 @@ stringList cDbusDevkit::GetDbusPropertyAS (const string &path,
     // free reply and close connection
     dbus_message_unref(msg);
 
-    // An empty array of string contains one null string, so fix this
+    // An empty array of strings contains one null string, so fix this
     if (!retval.empty()) {
         if (retval.front().empty()) {
             retval.clear();

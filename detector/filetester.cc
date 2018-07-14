@@ -2,7 +2,7 @@
  * filedetector.cc: Detects file types and returns a list of keys depending on
  *                  the detected file type.
  *
- * Copyright (C) 2010 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
+ * Copyright (C) 2010-2018 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
  *
  * This code is distributed under the terms and conditions of the
  * GNU GENERAL PUBLIC LICENSE. See the file COPYING for details.
@@ -32,7 +32,7 @@ bool cFileTester::RmLink(const string ln)
     if (lstat(to, &s) != 0) {
         if (errno != ENOENT) {
             string err = strerror(errno);
-            mLogger->logmsg(LOGLEVEL_ERROR, "Error removing %s: %s",
+            mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Error removing %s: %s",
                             to, strerror(errno));
             return false;
         }
@@ -40,13 +40,13 @@ bool cFileTester::RmLink(const string ln)
     else {
         if (S_ISLNK(s.st_mode)) {
             if (unlink(to) != 0) {
-                 mLogger->logmsg(LOGLEVEL_ERROR, "Can not remove %s: %s",
+                 mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Can not remove %s: %s",
                                 to, strerror(errno));
             return false;
             }
         }
         else {
-            mLogger->logmsg(LOGLEVEL_ERROR, "File/Directory %s already exist",
+            mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: File/Directory %s already exist",
                            to);
             return false;
         }
@@ -64,7 +64,7 @@ void cFileTester::Link(const string ln)
     }
     if (symlink(from, to) != 0) {
         string err = strerror(errno);
-        mLogger->logmsg(LOGLEVEL_ERROR, "Can not link from %s to %s: %s", from,
+        mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Can not link from %s to %s: %s", from,
                         to, strerror(errno));
     }
 }
@@ -94,7 +94,7 @@ void cFileTester::BuildSuffixCache (string path) {
     string file;
 
     if (path.empty()) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "No mount path");
+        mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: No mount path");
         return;
     }
 
@@ -106,7 +106,7 @@ void cFileTester::BuildSuffixCache (string path) {
 #endif
     dp = opendir (path.c_str());
     if (dp == NULL) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "Could not open %s : %s",
+        mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Could not open %s : %s",
                        path.c_str(), strerror (errno));
         return;
     }
@@ -116,7 +116,7 @@ void cFileTester::BuildSuffixCache (string path) {
             file = path + ep->d_name;
 
             if (stat(file.c_str(), &st) != 0) {
-                mLogger->logmsg(LOGLEVEL_ERROR, "Can not stat file %s: %s",
+                mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Can not stat file %s: %s",
                                file.c_str(), strerror(errno));
                 break;
             }
@@ -167,7 +167,7 @@ bool cFileTester::loadConfig (cConfigFileParser config,
 
     stringList vals;
     if (!config.GetValues(sectionname, "FILES", vals)) {
-        mLogger->logmsg(LOGLEVEL_ERROR, "No files specified");
+        mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: No files specified");
         return false;
     }
 
@@ -175,7 +175,7 @@ bool cFileTester::loadConfig (cConfigFileParser config,
     for (it = vals.begin(); it != vals.end(); it++) {
         string s = *it;
         mSuffix.insert(s);
-        mLogger->logmsg(LOGLEVEL_INFO, "  Add file %s", s.c_str());
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester:  Add file %s", s.c_str());
     }
 
     // Read Link-Path
@@ -192,7 +192,7 @@ bool cFileTester::loadConfig (cConfigFileParser config,
             mConfiguredAutoMount = false;
         }
         else {
-            mLogger->logmsg(LOGLEVEL_ERROR, "Invalid keyword %s for AUTOMOUNT",
+            mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: Invalid keyword %s for AUTOMOUNT",
                                             automount.c_str());
             return false;
         }
@@ -211,21 +211,21 @@ void cFileTester::startScan (cMediaHandle &d, cDbusDevkit *devkit)
     mDetectedSuffixCache.clear();
     if (!(m & MEDIA_AVAILABLE))
     {
-        mLogger->logmsg(LOGLEVEL_INFO, "Remove from device set");
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Remove from device set");
         removeDevice (d);
         return;
     }
 
     if (inDeviceSet(dev)) {
-        mLogger->logmsg(LOGLEVEL_INFO, "startScan Device already in device set");
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: startScan Device already in device set");
         return;
     }
     if (!AutoMount(d.GetPath())) {
-        mLogger->logmsg(LOGLEVEL_INFO, "Automount failed");
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Automount failed");
         mMountError = true;
         return;
     }
-    mLogger->logmsg(LOGLEVEL_INFO, "Build cache for device %s", dev.c_str());
+    mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Build cache for device %s", dev.c_str());
     BuildSuffixCache(GetMountPath());
 }
 
@@ -234,15 +234,15 @@ void cFileTester::endScan (cMediaHandle &d)
     string dev = d.GetDeviceFile();
 
     if (hasMountError()) {
-        mLogger->logmsg(LOGLEVEL_INFO, "error on scan");
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester:: error on scan");
         return;
     }
     if (inDeviceSet(dev)) {
-        mLogger->logmsg(LOGLEVEL_INFO, "endScan Device already in device set");
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: endScan Device already in device set");
         return;
     }
     if ((isAutoMounted()) && (!mLinkPath.empty())) {
-        mLogger->logmsg(LOGLEVEL_INFO, "Linking to %s", mLinkPath.c_str());
+        mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Linking to %s", mLinkPath.c_str());
         Link(GetMountPath());
     }
     if (!mAutoMount) {
@@ -252,13 +252,13 @@ void cFileTester::endScan (cMediaHandle &d)
     devinfo.devPath = d.GetPath();
     devinfo.linkPath = mLinkPath;
     mDeviceMap[dev] = devinfo;
-    mLogger->logmsg(LOGLEVEL_INFO, "Add Device %s to device set", dev.c_str());
+    mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Add Device %s to device set", dev.c_str());
 }
 
 void cFileTester::removeDevice (cMediaHandle d)
 {
     string path = d.GetPath();
-    mLogger->logmsg(LOGLEVEL_INFO, "Removing %s", path.c_str());
+    mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Removing %s", path.c_str());
     DevMap::iterator it;
     string s;
     for (it = mDeviceMap.begin(); it != mDeviceMap.end(); it++) {
@@ -283,17 +283,24 @@ bool cFileTester::AutoMount(string devpath)
     {
         try {
             if (!mDevKit->IsMounted(devpath)) {
-                mLogger->logmsg(LOGLEVEL_INFO, "Try to AutoMount : %s",
+                mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Try to AutoMount : %s",
                         mDevKit->AutoMount(devpath).c_str());
             }
             mMountPath = mDevKit->GetMountPaths(devpath).front();
-            mLogger->logmsg(LOGLEVEL_INFO, "Mount Path >%s< %d",
-                    mMountPath.c_str(), mMountPath.length()); // TODO
+#ifdef DEBUG
+            mLogger->logmsg(LOGLEVEL_INFO, "cFileTester: Mount Path >%s< %d",
+                    mMountPath.c_str(), mMountPath.length());
+#endif
             if (!mMountPath.empty()) {
                 return true;
             }
         } catch (cDeviceKitException &e) {
-            mLogger->logmsg(LOGLEVEL_ERROR, "AutoMount DeviceKit Error %s", e.what());
+#ifdef DEBUG
+            // Error No such interface 'org.freedesktop.UDisks2.Filesystem' is OK for medias without
+            // a file system eg audio CDs
+            mLogger->logmsg(LOGLEVEL_ERROR, "cFileTester: AutoMount DeviceKit Error %s", e.what());
+#endif
+            return false;
         }
         sleep(1);
     }

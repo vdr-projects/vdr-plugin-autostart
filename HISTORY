@@ -38,3 +38,8 @@ VDR Plugin 'autostart' Revision History
 2013-02-12: Version 0.9.6
 
 - Additional Makefile fixes for VDR 1.7.36
+
+2018-07-14: Version 0.9.7
+
+- Fix crashes.
+- Add support for Udisks2.
